@@ -1,0 +1,278 @@
+@page "{id:long}"
+@model PresentationLayer.Pages.Document.EditModel
+@{
+    ViewData["Title"] = "Sửa Tài liệu";
+}
+
+<style>
+    :root {
+        --accent-amber: #ffb703;
+        --accent-amber-dark: #ff8c00;
+        --bg-color: #0b0d14;
+        --card-bg: #141822; /* Nền tối đặc, không dùng kính mờ */
+        --border-color: rgba(255, 255, 255, 0.08);
+        --text-main: #ffffff;
+        --text-muted: #94a3b8;
+        --input-bg: rgba(255, 255, 255, 0.03);
+        --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .crud-page {
+        min-height: calc(100vh - 80px); /* Căn giữa theo chiều cao */
+        overflow-y: auto;
+        padding: 2rem;
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center; /* Căn giữa theo chiều ngang */
+    }
+
+        .crud-page::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .crud-page::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+    /* Vệt sáng nền nhẹ nhàng cho bớt trống trải (không đè lên khung) */
+    .bg-orb {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: var(--accent-amber);
+        border-radius: 50%;
+        filter: blur(120px);
+        opacity: 0.1; /* Rất mờ để không gây chói */
+        top: 5%;
+        right: 15%;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .form-card {
+        width: 100%;
+        max-width: 560px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        z-index: 1;
+        margin-top: 8vh; /* Đẩy khung xích xuống một chút cho cân đối */
+        box-shadow: none; /* KHÔNG đổ bóng */
+    }
+
+    .form-card-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .form-card-icon {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, var(--accent-amber), var(--accent-amber-dark));
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        box-shadow: none; /* KHÔNG đổ bóng */
+    }
+
+    .form-card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .form-card-subtitle {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+    }
+
+    .form-card-body {
+        padding: 2rem;
+    }
+
+    .field-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .field-label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 0.6rem;
+    }
+
+        .field-label .req {
+            color: #fb7185;
+            margin-left: 0.2rem;
+        }
+
+    .field-input {
+        width: 100%;
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-main);
+        padding: 0.85rem 1rem;
+        font-size: 0.95rem;
+        font-family: 'Inter', sans-serif;
+        transition: var(--transition-smooth);
+        appearance: none;
+    }
+
+        .field-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent-amber);
+            /* Giữ lại viền focus nhẹ để biết đang gõ ở đâu, không dùng bóng đổ to */
+            box-shadow: 0 0 0 2px rgba(255, 183, 3, 0.15);
+        }
+
+        .field-input option {
+            background: var(--card-bg);
+            color: var(--text-main);
+        }
+
+    .alert-err {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.9rem 1.25rem;
+        background: rgba(244, 63, 94, 0.1);
+        border: 1px solid rgba(244, 63, 94, 0.2);
+        border-radius: 10px;
+        color: #fb7185;
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        padding: 1.25rem 2rem;
+        border-top: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.01);
+    }
+
+    .btn-submit {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, var(--accent-amber), var(--accent-amber-dark));
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        box-shadow: none; /* KHÔNG đổ bóng */
+    }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #ffc125, #ffa01a); /* Đổi màu sáng hơn xíu khi hover thay vì đổ bóng */
+        }
+
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        text-decoration: none;
+    }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+</style>
+
+<div class="crud-page">
+    <div class="bg-orb"></div>
+
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+            <div>
+                <div class="form-card-title">Sửa Tài liệu</div>
+                <div class="form-card-subtitle">Cập nhật tiêu đề và môn học</div>
+            </div>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert-err" style="margin: 1.5rem 2rem 0">
+                <i class="fa-solid fa-circle-exclamation" style="flex-shrink:0; margin-top: 0.15rem;"></i>
+                <div>
+                    @foreach (var e in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <div>@e.ErrorMessage</div>
+                    }
+                </div>
+            </div>
+        }
+
+        <form method="post">
+            <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+            <div class="form-card-body">
+                <div class="field-group">
+                    <label class="field-label" for="title">Tiêu đề tài liệu <span class="req">*</span></label>
+                    <input type="text" id="title" name="title" class="field-input" value="@Model.Document.Title" required />
+                </div>
+
+                <div class="field-group" style="margin-bottom:0">
+                    <label class="field-label" for="subjectId">Môn học <span class="req">*</span></label>
+                    <select id="subjectId" name="subjectId" class="field-input" required>
+                        @foreach (var s in Model.Subjects)
+                        {
+                            if (s.Id == Model.Document.SubjectId)
+                            {
+                                <option value="@s.Id" selected>[@s.Code] @s.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@s.Id">[@s.Code] @s.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">
+                    <i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi
+                </button>
+                <a href="@(string.IsNullOrEmpty(Model.ReturnUrl) ? "/Document" : Model.ReturnUrl)" class="btn-cancel">
+                    <i class="fa-solid fa-arrow-left"></i> Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,325 @@
+@page
+@model PresentationLayer.Pages.Auth.LoginModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập - RAG AI Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="/css/site.css" />
+    <style>
+            :root {
+                --primary-glow: #6c63ff;
+                --secondary-glow: #a78bfa;
+                --bg-color: #0b0d14;
+                --card-bg: rgba(20, 24, 34, 0.65);
+                --border-color: rgba(255, 255, 255, 0.08);
+                --text-main: #ffffff;
+                --text-muted: #94a3b8;
+                --input-bg: rgba(255, 255, 255, 0.03);
+                --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            }
+
+            * {
+                box-sizing: border-box;
+                font-family: 'Inter', sans-serif;
+            }
+
+            .auth-body {
+                background-color: var(--bg-color);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                overflow: hidden;
+                margin: 0;
+                padding: 1.5rem;
+                position: relative;
+            }
+
+            /* Decorative Background Orbs */
+            .bg-orb {
+                position: absolute;
+                border-radius: 50%;
+                filter: blur(100px);
+                opacity: 0.4;
+                z-index: 0;
+                animation: float 10s infinite ease-in-out alternate;
+            }
+
+            .orb-1 {
+                width: 400px;
+                height: 400px;
+                background: var(--primary-glow);
+                top: -10%;
+                left: -5%;
+            }
+
+            .orb-2 {
+                width: 350px;
+                height: 350px;
+                background: var(--secondary-glow);
+                bottom: -10%;
+                right: -5%;
+                animation-delay: -5s;
+            }
+
+            @@keyframes float {
+                0% {
+                    transform: translate(0, 0);
+                }
+
+                100% {
+                    transform: translate(30px, 50px);
+                }
+            }
+
+            .auth-container {
+                width: 100%;
+                max-width: 420px;
+                z-index: 1;
+            }
+
+            .auth-card {
+                background: var(--card-bg);
+                backdrop-filter: blur(24px);
+                -webkit-backdrop-filter: blur(24px);
+                border: 1px solid var(--border-color);
+                border-radius: 24px;
+                padding: 3rem 2.5rem;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                animation: card-appear 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+
+            @@keyframes card-appear {
+                from {
+                    opacity: 0;
+                    transform: translateY(40px) scale(0.98);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+
+            .auth-logo {
+                width: 60px;
+                height: 60px;
+                background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 1.75rem;
+                margin: 0 auto 1.5rem;
+                box-shadow: 0 10px 25px rgba(108, 99, 255, 0.4);
+            }
+
+            .auth-header {
+                text-align: center;
+                margin-bottom: 2.5rem;
+            }
+
+            .auth-title {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: var(--text-main);
+                margin: 0 0 0.5rem 0;
+                letter-spacing: -0.5px;
+            }
+
+            .auth-subtitle {
+                font-size: 0.9rem;
+                color: var(--text-muted);
+                margin: 0;
+                line-height: 1.5;
+            }
+
+            .input-group-custom {
+                position: relative;
+                margin-bottom: 1.5rem;
+            }
+
+            .form-label {
+                display: block;
+                font-size: 0.85rem;
+                font-weight: 500;
+                color: var(--text-muted);
+                margin-bottom: 0.5rem;
+            }
+
+            .form-input-custom {
+                width: 100%;
+                background: var(--input-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 0.85rem 1rem 0.85rem 2.8rem;
+                color: var(--text-main);
+                font-size: 0.95rem;
+                outline: none;
+                transition: var(--transition-smooth);
+            }
+
+                .form-input-custom::placeholder {
+                    color: rgba(148, 163, 184, 0.5);
+                }
+
+                .form-input-custom:focus {
+                    background: rgba(255, 255, 255, 0.06);
+                    border-color: var(--secondary-glow);
+                    box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.1);
+                }
+
+            .input-icon-custom {
+                position: absolute;
+                left: 1rem;
+                bottom: 0.95rem;
+                color: var(--text-muted);
+                font-size: 1rem;
+                pointer-events: none;
+                transition: var(--transition-smooth);
+            }
+
+            .form-input-custom:focus + .input-icon-custom {
+                color: var(--secondary-glow);
+            }
+
+            .auth-btn {
+                width: 100%;
+                margin-top: 1rem;
+                padding: 0.85rem;
+                font-size: 1rem;
+                font-weight: 600;
+                color: #fff;
+                background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+                border: none;
+                border-radius: 12px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                transition: var(--transition-smooth);
+                box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
+            }
+
+                .auth-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(108, 99, 255, 0.5);
+                }
+
+                .auth-btn:active {
+                    transform: translateY(0);
+                }
+
+            .auth-link {
+                text-align: center;
+                margin-top: 2rem;
+                font-size: 0.9rem;
+                color: var(--text-muted);
+            }
+
+                .auth-link a {
+                    color: var(--secondary-glow);
+                    text-decoration: none;
+                    font-weight: 600;
+                    margin-left: 0.25rem;
+                    transition: var(--transition-smooth);
+                }
+
+                    .auth-link a:hover {
+                        color: #fff;
+                        text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+                    }
+
+            .alert-custom {
+                padding: 0.85rem 1rem;
+                border-radius: 12px;
+                font-size: 0.85rem;
+                margin-bottom: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                font-weight: 500;
+            }
+
+            .alert-success {
+                background: rgba(16, 185, 129, 0.1);
+                border: 1px solid rgba(16, 185, 129, 0.2);
+                color: #34d399;
+            }
+
+            .alert-error {
+                background: rgba(244, 63, 94, 0.1);
+                border: 1px solid rgba(244, 63, 94, 0.2);
+                color: #fb7185;
+            }
+    </style>
+</head>
+<body class="auth-body">
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+
+            <div class="auth-header">
+                <h1 class="auth-title">RAG AI Assistant</h1>
+                <p class="auth-subtitle">Đăng nhập để đặt câu hỏi hoặc tải lên tài liệu học tập của bạn</p>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert-custom alert-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>@TempData["SuccessMessage"]</span>
+                </div>
+            }
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert-custom alert-error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>@string.Join(" ", ViewData.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))</span>
+                </div>
+            }
+
+            <form method="post">
+                <input type="hidden" asp-for="Input.ReturnUrl" />
+
+                <div class="input-group-custom">
+                    <label class="form-label" for="email">Địa chỉ Email</label>
+                    <input id="email" type="email" asp-for="Input.Email" class="form-input-custom" placeholder="name@domain.com" required autocomplete="email" />
+                    <i class="fa-solid fa-envelope input-icon-custom"></i>
+                </div>
+
+                <div class="input-group-custom" style="margin-bottom: 2rem;">
+                    <label class="form-label" for="password">Mật khẩu</label>
+                    <input id="password" type="password" asp-for="Input.Password" class="form-input-custom" placeholder="••••••••" required />
+                    <i class="fa-solid fa-lock input-icon-custom"></i>
+                </div>
+
+                <button type="submit" class="auth-btn">
+                    <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+                </button>
+            </form>
+
+            <div class="auth-link">
+                Chưa có tài khoản? <a href="/Auth/Register?returnUrl=@Model.Input.ReturnUrl">Đăng ký ngay</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

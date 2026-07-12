@@ -1,0 +1,204 @@
+@page
+@model PresentationLayer.Pages.Auth.VerifyEmailModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xác nhận tài khoản - RAG AI Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-glow: #6c63ff;
+            --secondary-glow: #a78bfa;
+            --bg-color: #0b0d14;
+            --card-bg: rgba(20, 24, 34, 0.65);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --success-glow: #00d4aa;
+            --danger-glow: #f43f5e;
+            --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Background Orbs */
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary-glow);
+            top: -5%;
+            right: -5%;
+        }
+
+        .orb-2 {
+            width: 350px;
+            height: 350px;
+            background: #1e3a8a;
+            bottom: -5%;
+            left: -5%;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            z-index: 1;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .status-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .status-icon.success {
+            background: rgba(0, 212, 170, 0.1);
+            border: 2px solid var(--success-glow);
+            color: var(--success-glow);
+            box-shadow: 0 0 20px rgba(0, 212, 170, 0.2);
+        }
+
+        .status-icon.danger {
+            background: rgba(244, 63, 94, 0.1);
+            border: 2px solid var(--danger-glow);
+            color: var(--danger-glow);
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.2);
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0 0 1rem 0;
+            letter-spacing: -0.5px;
+        }
+
+        .description {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 0 0 2rem 0;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 0.85rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(108, 99, 255, 0.45);
+        }
+
+        .btn-action:active {
+            transform: translateY(0);
+        }
+
+        .footer-link {
+            display: inline-block;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition-smooth);
+        }
+
+        .footer-link:hover {
+            color: var(--primary-glow);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+
+    <div class="container">
+        <div class="card">
+            @if (Model.IsSuccess)
+            {
+                <div class="status-icon success">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h1 class="title">Xác Nhận Thành Công</h1>
+                <p class="description" style="margin-bottom: 0;">
+                    @Model.Message
+                </p>
+            }
+            else
+            {
+                <div class="status-icon danger">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+                <h1 class="title">Kích Hoạt Thất Bại</h1>
+                <p class="description">
+                    @Model.Message
+                </p>
+                <a href="/Auth/Login" class="btn-action" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); box-shadow: none; color: var(--text-main);">
+                    Quay lại trang Đăng nhập
+                </a>
+            }
+        </div>
+    </div>
+</body>
+</html>

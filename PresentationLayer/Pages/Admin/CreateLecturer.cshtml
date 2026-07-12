@@ -1,0 +1,113 @@
+@page
+@model PresentationLayer.Pages.Admin.CreateLecturerModel
+@{
+    ViewData["Title"] = "Tạo tài khoản Giảng viên";
+}
+
+<style>
+.crud-page { height: 100%; overflow-y: auto; padding: 2rem; }
+.crud-page::-webkit-scrollbar { width: 4px; }
+.crud-page::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+.page-heading { font-size: 1.4rem; font-weight: 700; background: linear-gradient(135deg, #fff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: .65rem; }
+.page-heading i { -webkit-text-fill-color: #a78bfa; }
+
+.btn-back { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary); font-size: .82rem; font-weight: 500; text-decoration: none; transition: all var(--transition); }
+.btn-back:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-strong); }
+
+.form-wrap { max-width: 640px; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: .75rem; }
+.card-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: .95rem; }
+.card-icon.purple { background: rgba(108,99,255,.2); color: var(--accent); }
+.card-title { font-size: .95rem; font-weight: 600; color: var(--text-primary); }
+.card-subtitle { font-size: .75rem; color: var(--text-muted); margin-top: .1rem; }
+.card-body { padding: 1.5rem; }
+
+.form-group { margin-bottom: 1.25rem; }
+.form-label { display: block; font-size: .8rem; font-weight: 500; color: var(--text-secondary); margin-bottom: .45rem; }
+.form-input { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); padding: .65rem .9rem; font-size: .875rem; font-family: 'Inter', sans-serif; transition: all var(--transition); }
+.form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+.btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .7rem 1.5rem; background: linear-gradient(135deg, var(--accent), #a78bfa); border: none; border-radius: var(--radius-sm); color: #fff; font-size: .875rem; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: all var(--transition); box-shadow: 0 4px 16px var(--accent-glow); width: 100%; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--accent-glow); }
+
+.alert-error-bar { display: flex; align-items: center; gap: .75rem; padding: .85rem 1.25rem; background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.25); border-radius: var(--radius-md); color: var(--accent-danger); font-size: .85rem; margin-bottom: 1.5rem; animation: msg-in .25s ease; }
+
+.validation-error { color: var(--accent-danger); font-size: .78rem; margin-top: .35rem; display: block; }
+
+.info-hint { display: flex; align-items: flex-start; gap: .5rem; padding: .75rem 1rem; background: rgba(108,99,255,.06); border: 1px solid rgba(108,99,255,.15); border-radius: var(--radius-sm); margin-bottom: 1.25rem; font-size: .78rem; color: var(--text-secondary); line-height: 1.5; }
+.info-hint i { color: var(--accent); margin-top: .1rem; flex-shrink: 0; }
+</style>
+
+<div class="crud-page">
+    <div class="page-header">
+        <h1 class="page-heading">
+            <i class="fa-solid fa-user-plus"></i>
+            Tạo tài khoản Giảng viên
+        </h1>
+        <a asp-page="Index" class="btn-back">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert-error-bar">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>@string.Join(" ", ViewData.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage))</span>
+        </div>
+    }
+
+    <div class="form-wrap">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon purple">
+                    <i class="fa-solid fa-id-card-clip"></i>
+                </div>
+                <div>
+                    <div class="card-title">Thông tin tài khoản mới</div>
+                    <div class="card-subtitle">Nhập các thông tin để đăng ký tài khoản cho giảng viên</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="info-hint">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Tài khoản giảng viên sau khi tạo sẽ được kích hoạt ngay lập tức. Mật khẩu tạm thời mặc định là <strong>1234@AbcD</strong> và sẽ được gửi tự động đến email của giảng viên.</span>
+                </div>
+
+                <form method="post">
+                    <div class="form-group">
+                        <label asp-for="Input.FullName" class="form-label">
+                            <i class="fa-solid fa-user" style="margin-right:.3rem;color:var(--accent)"></i>
+                            Họ và Tên
+                        </label>
+                        <input asp-for="Input.FullName" class="form-input" placeholder="Nguyễn Văn A" required />
+                        <span asp-validation-for="Input.FullName" class="validation-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Input.Email" class="form-label">
+                            <i class="fa-solid fa-envelope" style="margin-right:.3rem;color:var(--accent-2)"></i>
+                            Địa chỉ Email
+                        </label>
+                        <input asp-for="Input.Email" class="form-input" type="email" placeholder="lecturer@domain.com" required />
+                        <span asp-validation-for="Input.Email" class="validation-error"></span>
+                    </div>
+
+
+
+                    <button type="submit" class="btn-primary">
+                        <i class="fa-solid fa-user-plus"></i>
+                        Tạo tài khoản
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

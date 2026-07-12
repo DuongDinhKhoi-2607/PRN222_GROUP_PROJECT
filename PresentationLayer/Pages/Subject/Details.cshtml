@@ -1,0 +1,298 @@
+@page "{id:long}"
+@model PresentationLayer.Pages.Subject.DetailsModel
+@{
+    ViewData["Title"] = "Chi tiết Môn học";
+}
+
+<style>
+    :root {
+        --primary-glow: #00d4aa;
+        --secondary-glow: #00b090;
+        --accent-amber: #ffb703;
+        --accent-amber-glow: rgba(255, 183, 3, 0.4);
+        --bg-color: #0b0d14;
+        --card-bg: #141822; /* Chuyển thành màu nền đặc (solid), không dùng trong suốt nữa */
+        --border-color: rgba(255, 255, 255, 0.08);
+        --text-main: #ffffff;
+        --text-muted: #94a3b8;
+        --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .crud-page {
+        min-height: calc(100vh - 80px); /* Tính toán chiều cao để căn giữa tốt hơn */
+        overflow-y: auto;
+        padding: 2rem;
+        position: relative;
+        display: flex;
+        align-items: flex-start; /* Giữ khung ở trên... */
+        justify-content: center; /* ...và căn giữa theo chiều ngang */
+    }
+
+    /* Decorative Orbs - Vẫn giữ lại chùm sáng phía sau cho đẹp nhưng không làm mờ form */
+    .bg-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(100px);
+        opacity: 0.25;
+        z-index: 0;
+        pointer-events: none;
+        animation: float-slow 12s infinite ease-in-out alternate;
+    }
+
+    .orb-1 {
+        width: 300px;
+        height: 300px;
+        background: var(--primary-glow);
+        top: 10%;
+        left: 20%;
+    }
+
+    .orb-2 {
+        width: 400px;
+        height: 400px;
+        background: #6c63ff;
+        bottom: 10%;
+        right: 15%;
+        animation-delay: -6s;
+    }
+
+    @@keyframes float-slow {
+        0% {
+            transform: translate(0, 0);
+        }
+
+        100% {
+            transform: translate(40px, -30px);
+        }
+    }
+
+    /* Solid Premium Card */
+    .form-card {
+        width: 100%;
+        max-width: 600px;
+        background: var(--card-bg); /* Nền đặc */
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        overflow: hidden;
+        z-index: 1;
+        /* Tăng đổ bóng lên chút để bù lại việc bỏ hiệu ứng kính */
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        animation: card-appear 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        margin-top: 8vh; /* Đẩy khung xích xuống một khoảng vừa phải */
+    }
+
+    @@keyframes card-appear {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.98);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .form-card-header {
+        padding: 1.75rem 2rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .form-card-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.25rem;
+        box-shadow: 0 8px 20px rgba(0, 212, 170, 0.3);
+        flex-shrink: 0;
+    }
+
+    .form-card-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: -0.5px;
+    }
+
+    .form-card-subtitle {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+    }
+
+    .detail-list {
+        padding: 1.5rem 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .detail-row {
+        display: grid;
+        grid-template-columns: minmax(130px, 30%) 1fr;
+        gap: 1.5rem;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        transition: var(--transition-smooth);
+    }
+
+        .detail-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+    .detail-key {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+    }
+
+    .detail-val {
+        font-size: 0.95rem;
+        color: var(--text-main);
+        line-height: 1.5;
+    }
+
+    .badge-code {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.85rem;
+        background: rgba(108, 99, 255, 0.15);
+        border: 1px solid rgba(108, 99, 255, 0.3);
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #a78bfa;
+        box-shadow: 0 0 10px rgba(108, 99, 255, 0.1);
+    }
+
+    .id-chip {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-variant-numeric: tabular-nums;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        padding: 1.5rem 2rem;
+        border-top: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.01);
+    }
+
+    .btn-edit {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, var(--accent-amber), #ff8c00);
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        box-shadow: 0 4px 15px var(--accent-amber-glow);
+        text-decoration: none;
+    }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 183, 3, 0.6);
+            color: #fff;
+        }
+
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        text-decoration: none;
+    }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+        }
+</style>
+
+<div class="crud-page">
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-icon"><i class="fa-solid fa-book-open"></i></div>
+            <div>
+                <div class="form-card-title">Chi tiết Môn học</div>
+                <div class="form-card-subtitle">Thông tin đầy đủ và mô tả môn học</div>
+            </div>
+        </div>
+
+        <div class="detail-list">
+            <div class="detail-row">
+                <span class="detail-key">ID Hệ thống</span>
+                <div><span class="id-chip">#@Model.Subject.Id</span></div>
+            </div>
+            <div class="detail-row">
+                <span class="detail-key">Mã môn học</span>
+                <div><span class="badge-code"><i class="fa-solid fa-hashtag" style="font-size: 0.75rem; margin-right: 0.3rem;"></i>@Model.Subject.Code</span></div>
+            </div>
+            <div class="detail-row">
+                <span class="detail-key">Tên môn học</span>
+                <span class="detail-val" style="font-weight:600; color: #fff;">@Model.Subject.Name</span>
+            </div>
+            <div class="detail-row" style="align-items: flex-start;">
+                <span class="detail-key" style="margin-top: 0.2rem;">Mô tả chi tiết</span>
+                <span class="detail-val" style="color: #94a3b8;">
+                    @if (string.IsNullOrWhiteSpace(Model.Subject.Description))
+                    {
+                        <em style="opacity: 0.6;">Chưa có thông tin mô tả cho môn học này.</em>
+                    }
+                    else
+                    {
+                        @Model.Subject.Description
+                    }
+                </span>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            @if (User.IsInRole("admin"))
+            {
+                <a asp-page="Edit" asp-route-id="@Model.Subject.Id" class="btn-edit">
+                    <i class="fa-solid fa-pen"></i> Chỉnh sửa
+                </a>
+            }
+            <a asp-page="Index" class="btn-cancel">
+                <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+    </div>
+</div>

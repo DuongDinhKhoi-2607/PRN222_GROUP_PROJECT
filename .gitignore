@@ -1,0 +1,61 @@
+## Ignore Visual Studio temporary files, build results, and user-specific files
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Mono auto-generated files
+mono_crash.*
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Re]leasePublic/
+x64/
+x86/
+build/
+bld/
+[Bin]/
+[Obj]/
+bin/
+obj/
+Generated Files/
+My Project/
+[Tt]emp/
+
+# Visual Studio 2015/2017/2019/2022 cache directory
+.vs/
+.vs*
+
+# Log files
+*.log
+
+# NuGet Packages
+*.nupkg
+# The packages folder can be ignored because of Package Restore
+**/packages/*
+# except build/, which is used as an MSBuild target.
+!**/packages/build/
+# Uncomment if necessary:
+# **/packages/
+
+# Rider / IntelliJ Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Local configuration files
+appsettings.Development.json
+secrets.json
+
+# Local storage or temporary folders
+/wwwroot/uploads/*
+!/wwwroot/uploads/.gitkeep
