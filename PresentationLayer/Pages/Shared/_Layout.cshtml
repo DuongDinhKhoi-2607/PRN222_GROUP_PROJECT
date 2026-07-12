@@ -96,6 +96,15 @@
                             <div class="nav-indicator"></div>
                         </a>
                     }
+                    @if (roleClaim == "benchmarkmanager" || roleClaim == "admin")
+                    {
+                        <div class="nav-section-label" style="margin-top:.75rem">Đánh giá AI</div>
+                        <a href="/Benchmark" class="nav-item @(path.Contains("/Benchmark", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>Benchmark Studio</span>
+                            <div class="nav-indicator"></div>
+                        </a>
+                    }
 
                     @if (User.Identity?.IsAuthenticated == true)
                     {

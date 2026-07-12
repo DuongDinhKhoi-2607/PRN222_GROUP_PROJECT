@@ -1,0 +1,184 @@
+@page
+@model PresentationLayer.Pages.Benchmark.ResultModel
+@{
+    ViewData["Title"] = "Kết Quả Benchmark";
+    var m = Model.ExperimentRun?.ExperimentRunMetric;
+}
+
+<style>
+    .result-container { padding: 2rem; max-width: 1400px; margin: 0 auto; overflow-y: auto; height: 100%; }
+    .result-container::-webkit-scrollbar { width: 4px; }
+    .result-container::-webkit-scrollbar-track { background: transparent; }
+    .result-container::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+    .header-actions { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+    .btn-back { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: var(--transition); background: var(--bg-elevated); padding: 0.5rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .btn-back:hover { color: var(--text-primary); border-color: var(--accent); }
+    
+    .run-title { display: flex; align-items: center; gap: 1rem; }
+    .run-title h2 { font-size: 1.5rem; color: var(--text-primary); margin: 0; }
+    
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .metric-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; text-align: center; }
+    .metric-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+    .metric-value { font-size: 1.75rem; font-weight: 700; color: var(--accent); }
+    .metric-value.success { color: var(--accent-2); }
+    .metric-value.danger { color: var(--accent-danger); }
+    
+    .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .table-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); }
+    .table-header h5 { font-size: 1rem; color: var(--text-primary); font-weight: 600; margin: 0; }
+    
+    .table-custom { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .table-custom th, .table-custom td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    .table-custom th { background: var(--bg-elevated); color: var(--text-secondary); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .table-custom tr:hover td { background: var(--bg-hover); }
+    .table-custom tr:last-child td { border-bottom: none; }
+    
+    .q-text { font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; display: block; }
+    .a-text { color: var(--text-muted); font-size: 0.8rem; line-height: 1.5; }
+    
+    .score-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 600; font-size: 0.75rem; background: var(--bg-elevated); border: 1px solid var(--border); }
+    .score-badge.high { color: var(--accent-2); border-color: rgba(0,212,170,0.3); background: rgba(0,212,170,0.1); }
+    .score-badge.med { color: var(--accent-warn); border-color: rgba(255,183,3,0.3); background: rgba(255,183,3,0.1); }
+    .score-badge.low { color: var(--accent-danger); border-color: rgba(255,77,109,0.3); background: rgba(255,77,109,0.1); }
+</style>
+
+<div class="result-container">
+    <div class="header-actions">
+        <a href="/Benchmark" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Về danh sách</a>
+        @if (Model.ExperimentRun != null)
+        {
+            <div class="status-badge @(Model.ExperimentRun.Status == "done" ? "online" : "")" style="@(Model.ExperimentRun.Status != "done" ? "background: rgba(255,183,3,0.1); color: var(--accent-warn); border-color: rgba(255,183,3,0.2);" : "")">
+                <span class="status-dot" style="@(Model.ExperimentRun.Status != "done" ? "background: var(--accent-warn);" : "")"></span>
+                <span>@Model.ExperimentRun.Status.ToUpper()</span>
+            </div>
+        }
+    </div>
+
+    @if (Model.ExperimentRun == null)
+    {
+        <div class="metric-card" style="border-color: var(--accent-danger); color: var(--accent-danger);">
+            Không tìm thấy thông tin lượt chạy.
+        </div>
+    }
+    else
+    {
+        <div class="run-title mb-4" style="margin-bottom: 2rem;">
+            <h2>Kết Quả: @Model.ExperimentRun.RunName</h2>
+        </div>
+
+        @if (m != null)
+        {
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title">Faithfulness</div>
+                    <div class="metric-value @(m.AvgFaithfulness >= 4 ? "success" : m.AvgFaithfulness <= 2 ? "danger" : "")">
+                        @(m.AvgFaithfulness?.ToString("0.0")) <span style="font-size: 1rem; color: var(--text-muted);">/ 5</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Answer Relevancy</div>
+                    <div class="metric-value @(m.AvgAnswerRelevancy >= 4 ? "success" : m.AvgAnswerRelevancy <= 2 ? "danger" : "")">
+                        @(m.AvgAnswerRelevancy?.ToString("0.0")) <span style="font-size: 1rem; color: var(--text-muted);">/ 5</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Context Precision</div>
+                    <div class="metric-value @(m.AvgContextPrecision >= 4 ? "success" : m.AvgContextPrecision <= 2 ? "danger" : "")">
+                        @(m.AvgContextPrecision?.ToString("0.0")) <span style="font-size: 1rem; color: var(--text-muted);">/ 5</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Answer Correctness</div>
+                    <div class="metric-value @(m.AvgAnswerCorrectness >= 4 ? "success" : m.AvgAnswerCorrectness <= 2 ? "danger" : "")">
+                        @(m.AvgAnswerCorrectness?.ToString("0.0")) <span style="font-size: 1rem; color: var(--text-muted);">/ 5</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Avg Latency</div>
+                    <div class="metric-value" style="color: var(--text-primary);">
+                        @(m.AvgLatencyMs) <span style="font-size: 1rem; color: var(--text-muted);">ms</span>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (Model.ExperimentRun.Status == "done" && Model.ExperimentRun.EvaluationResults.Any())
+        {
+             <div class="metric-card" style="margin-bottom: 2rem;">
+                <div class="metric-title">Đang tổng hợp điểm số...</div>
+             </div>
+        }
+
+        <div class="table-wrap">
+            <div class="table-header">
+                <h5>Chi tiết từng câu hỏi</h5>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th style="min-width: 300px;">Nội dung</th>
+                            <th style="text-align: center;">Faithfulness</th>
+                            <th style="text-align: center;">Relevancy</th>
+                            <th style="text-align: center;">Context</th>
+                            <th style="text-align: center;">Correctness</th>
+                            <th style="text-align: center;">Tốc độ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.ExperimentRun.EvaluationResults.Any())
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                    Chưa có dữ liệu đánh giá nào (hoặc đã xảy ra lỗi toàn bộ).
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var r in Model.ExperimentRun.EvaluationResults)
+                            {
+                                <tr>
+                                    <td>@r.TestQuestionId</td>
+                                    <td>
+                                        <span class="q-text">@r.TestQuestion.Question</span>
+                                        <div class="a-text">
+                                            <strong>Ground Truth:</strong> @r.TestQuestion.GroundTruth
+                                        </div>
+                                        <details style="margin-top: 0.75rem; cursor: pointer; font-size: 0.8rem;">
+                                            <summary style="font-weight: 600; color: var(--accent); outline: none; margin-bottom: 0.5rem;">Xem chi tiết (AI Answer & Context)</summary>
+                                            <div style="padding: 1rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); line-height: 1.6;">
+                                                <strong style="color: var(--accent-2);">AI Answer:</strong>
+                                                <div style="white-space: pre-wrap; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--border);">@(string.IsNullOrEmpty(r.GeneratedAnswer) ? "Không có câu trả lời." : r.GeneratedAnswer)</div>
+                                                
+                                                <strong style="color: var(--text-muted);">Retrieved Contexts:</strong>
+                                                <div style="white-space: pre-wrap; color: var(--text-secondary); font-size: 0.75rem; overflow-y: auto; max-height: 200px;">@(string.IsNullOrEmpty(r.RetrievedContexts) ? "Không có context nào được lấy ra." : r.RetrievedContexts)</div>
+                                            </div>
+                                        </details>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <span class="score-badge @(r.Faithfulness >= 4 ? "high" : r.Faithfulness <= 2 ? "low" : "med")">@r.Faithfulness</span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <span class="score-badge @(r.AnswerRelevancy >= 4 ? "high" : r.AnswerRelevancy <= 2 ? "low" : "med")">@r.AnswerRelevancy</span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <span class="score-badge @(r.ContextPrecision >= 4 ? "high" : r.ContextPrecision <= 2 ? "low" : "med")">@r.ContextPrecision</span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <span class="score-badge @(r.AnswerCorrectness >= 4 ? "high" : r.AnswerCorrectness <= 2 ? "low" : "med")">@r.AnswerCorrectness</span>
+                                    </td>
+                                    <td style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">
+                                        @r.LatencyMs ms
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

@@ -110,7 +110,7 @@ namespace BussinessLayer.Services
                 Console.WriteLine("[Seed] Created default EmbeddingModel (id=1)");
             }
 
-            // 3. User id=1
+            // 3. User id=1 (admin)
             if (!await _db.Users.AnyAsync(u => u.Id == 1))
             {
                 string hashed = PasswordHelper.HashPassword("admin123");
@@ -120,6 +120,33 @@ namespace BussinessLayer.Services
                     VALUES (1, 'Demo User', 'demo@ragassistant.local', 'admin', '{hashed}', 1, GETDATE());
                     SET IDENTITY_INSERT users OFF;");
                 Console.WriteLine("[Seed] Created demo User (id=1) with hashed password admin123");
+            }
+
+            // 4. User id=2 (benchmarkmanager)
+            if (!await _db.Users.AnyAsync(u => u.Email == "benchmark@ragassistant.local"))
+            {
+                try 
+                {
+                    // Drop existing check constraint and recreate it to allow benchmarkmanager
+                    await _db.Database.ExecuteSqlRawAsync(@"
+                        IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK_users_role')
+                        BEGIN
+                            ALTER TABLE users DROP CONSTRAINT CK_users_role;
+                        END
+                        ALTER TABLE users ADD CONSTRAINT CK_users_role CHECK (role IN ('admin', 'lecturer', 'student', 'benchmarkmanager'));
+                    ");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[Seed] Warning when updating CK_users_role constraint: " + ex.Message);
+                }
+
+                string hashed = PasswordHelper.HashPassword("bench123");
+                await _db.Database.ExecuteSqlRawAsync($@"
+                    INSERT INTO users (full_name, email, role, password_hash, is_active, created_at)
+                    VALUES ('Benchmark Manager', 'benchmark@ragassistant.local', 'benchmarkmanager', '{hashed}', 1, GETDATE());
+                ");
+                Console.WriteLine("[Seed] Created benchmarkmanager User with hashed password bench123");
             }
         }
     }

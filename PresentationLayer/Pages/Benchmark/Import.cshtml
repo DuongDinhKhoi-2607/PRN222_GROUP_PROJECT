@@ -1,0 +1,95 @@
+@page
+@model PresentationLayer.Pages.Benchmark.ImportModel
+@{
+    ViewData["Title"] = "Import Câu Hỏi Test";
+}
+
+<style>
+    .import-container { padding: 2rem; max-width: 800px; margin: 0 auto; height: 100%; overflow-y: auto; }
+    .import-container::-webkit-scrollbar { width: 4px; }
+    .import-container::-webkit-scrollbar-track { background: transparent; }
+    .import-container::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+    .header-actions { margin-bottom: 2rem; }
+    .btn-back { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: var(--transition); background: var(--bg-elevated); padding: 0.5rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .btn-back:hover { color: var(--text-primary); border-color: var(--accent); }
+    
+    .import-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .import-card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; }
+    .import-card-header i { color: var(--accent); font-size: 1.25rem; }
+    .import-card-header h4 { font-size: 1.1rem; color: var(--text-primary); font-weight: 600; margin: 0; }
+    .import-card-body { padding: 1.5rem; }
+    
+    .form-group { margin-bottom: 1.5rem; }
+    .form-label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem; }
+    .form-control { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); padding: 0.75rem 1rem; font-family: monospace; font-size: 0.85rem; transition: all var(--transition); line-height: 1.5; }
+    .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    
+    .text-muted-custom { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.5rem; }
+    
+    .checkbox-group { display: flex; align-items: center; gap: 0.5rem; padding: 1rem; background: rgba(255, 77, 109, 0.05); border: 1px dashed rgba(255, 77, 109, 0.3); border-radius: var(--radius-sm); margin-bottom: 1.5rem; cursor: pointer; }
+    .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-danger); }
+    .checkbox-group label { color: var(--accent-danger); font-size: 0.85rem; font-weight: 500; cursor: pointer; margin: 0; user-select: none; }
+    
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, var(--accent), #a78bfa); border: none; border-radius: var(--radius-sm); color: #fff; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all var(--transition); box-shadow: 0 4px 16px var(--accent-glow); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--accent-glow); }
+    
+    .alert { padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.75rem; }
+    .alert-success { background: rgba(0, 212, 170, 0.1); border: 1px solid rgba(0, 212, 170, 0.2); color: var(--accent-2); }
+    .alert-danger { background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.2); color: var(--accent-danger); }
+</style>
+
+<div class="import-container">
+    <div class="header-actions">
+        <a href="/Benchmark" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại</a>
+    </div>
+
+    <div class="import-card">
+        <div class="import-card-header">
+            <i class="fa-solid fa-file-import"></i>
+            <h4>Import Bộ Đề Cho Môn Học (ID: @Model.SubjectId)</h4>
+        </div>
+        <div class="import-card-body">
+            @if(TempData["Message"] != null)
+            {
+                <div class="alert alert-success">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <div>@TempData["Message"]</div>
+                </div>
+            }
+            @if(TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <div>@TempData["Error"]</div>
+                </div>
+            }
+
+            <form method="post">
+                <input type="hidden" name="SubjectId" value="@Model.SubjectId" />
+                
+                <label class="checkbox-group">
+                    <input type="checkbox" name="Overwrite" value="true" checked />
+                    <label>Xóa toàn bộ bộ câu hỏi cũ của môn học này trước khi Import (Ghi đè)</label>
+                </label>
+
+                <div class="form-group">
+                    <label class="form-label">Dán mã JSON mảng câu hỏi:</label>
+                    <textarea name="JsonContent" class="form-control" rows="15" required placeholder='[
+  {
+    "Question": "Câu hỏi số 1?",
+    "GroundTruth": "Đáp án mẫu",
+    "ReferenceContext": "Tài liệu gốc",
+    "Difficulty": "easy"
+  }
+]'></textarea>
+                    <span class="text-muted-custom">Định dạng chuẩn là một mảng JSON chứa các object với các trường: Question, GroundTruth, ReferenceContext, Difficulty.</span>
+                </div>
+                
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Bắt đầu Import
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

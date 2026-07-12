@@ -1,0 +1,140 @@
+@page
+@model PresentationLayer.Pages.Admin.RAGEvaluation.IndexModel
+@{
+    ViewData["Title"] = "Đánh giá hiệu năng AI (RAG Evaluation)";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
+            <h5 class="mb-0">
+                <i class="fas fa-flask me-2"></i> RAG Evaluation Benchmark
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> 
+                Công cụ này sử dụng chính AI (LLM-as-a-Judge) để chấm điểm câu trả lời theo 3 tiêu chí (thang điểm 1-5):
+                <ul>
+                    <li><strong>Faithfulness:</strong> Tính trung thực, không ảo giác (hallucination).</li>
+                    <li><strong>Answer Relevance:</strong> Câu trả lời có đúng với trọng tâm câu hỏi và đáp án kỳ vọng không.</li>
+                    <li><strong>Context Relevance:</strong> Mức độ liên quan của các đoạn tài liệu được tìm thấy đối với câu hỏi.</li>
+                </ul>
+            </div>
+
+            <form method="post" class="mb-4">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="Question" class="form-label fw-bold">Câu hỏi cần kiểm tra (Question):</label>
+                        <textarea class="form-control" id="Question" name="Question" rows="3" required placeholder="Nhập câu hỏi sinh viên..."></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="ExpectedAnswer" class="form-label fw-bold">Câu trả lời kỳ vọng (Expected Answer - Tùy chọn):</label>
+                        <textarea class="form-control" id="ExpectedAnswer" name="ExpectedAnswer" rows="3" placeholder="Nhập câu trả lời mẫu để đối chiếu..."></textarea>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="SubjectId" class="form-label fw-bold">Lọc theo môn học (Subject ID - Tùy chọn):</label>
+                    <input type="number" class="form-control" id="SubjectId" name="SubjectId" placeholder="Ví dụ: 1" style="max-width: 200px;">
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-play me-2"></i> Chạy Đánh Giá
+                </button>
+            </form>
+
+            @if (Model.IsPostBack && Model.Result == null)
+            {
+                <div class="alert alert-danger">Có lỗi xảy ra trong quá trình đánh giá.</div>
+            }
+
+            @if (Model.Result != null)
+            {
+                <hr />
+                <h4 class="mb-3">Kết Quả Đánh Giá</h4>
+                
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-light border-0">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted text-uppercase small">Tốc độ phản hồi (Latency)</h6>
+                                <h3 class="mb-0 text-primary">@Model.Result.LatencyMilliseconds ms</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light border-0">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted text-uppercase small" title="Faithfulness">Trung thực (Faithfulness)</h6>
+                                <h3 class="mb-0 @(Model.Result.FaithfulnessScore >= 4 ? "text-success" : (Model.Result.FaithfulnessScore >= 3 ? "text-warning" : "text-danger"))">
+                                    @Model.Result.FaithfulnessScore / 5
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light border-0">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted text-uppercase small" title="Answer Relevance">Đúng trọng tâm (Relevance)</h6>
+                                <h3 class="mb-0 @(Model.Result.AnswerRelevanceScore >= 4 ? "text-success" : (Model.Result.AnswerRelevanceScore >= 3 ? "text-warning" : "text-danger"))">
+                                    @Model.Result.AnswerRelevanceScore / 5
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light border-0">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted text-uppercase small" title="Context Relevance">Độ chuẩn xác tài liệu trích xuất</h6>
+                                <h3 class="mb-0 @(Model.Result.ContextRelevanceScore >= 4 ? "text-success" : (Model.Result.ContextRelevanceScore >= 3 ? "text-warning" : "text-danger"))">
+                                    @Model.Result.ContextRelevanceScore / 5
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3 border-info">
+                    <div class="card-header bg-info text-white">
+                        <strong>Câu trả lời được sinh ra (Generated Answer)</strong>
+                    </div>
+                    <div class="card-body">
+                        <pre style="white-space: pre-wrap; font-family: inherit;">@Model.Result.GeneratedAnswer</pre>
+                    </div>
+                </div>
+
+                <div class="card mb-3 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <strong>Nhận xét từ AI Giám Khảo (Reasoning)</strong>
+                    </div>
+                    <div class="card-body">
+                        @Model.Result.Reasoning
+                    </div>
+                </div>
+
+                <div class="card mb-3 border-secondary">
+                    <div class="card-header bg-secondary text-white">
+                        <strong>Ngữ cảnh được sử dụng (Retrieved Contexts)</strong>
+                    </div>
+                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                        @if (Model.Result.RetrievedContexts != null && Model.Result.RetrievedContexts.Any())
+                        {
+                            <ul class="list-group list-group-flush">
+                                @for(int i = 0; i < Model.Result.RetrievedContexts.Count; i++)
+                                {
+                                    <li class="list-group-item">
+                                        <small class="text-muted d-block mb-1">Đoạn @(i + 1)</small>
+                                        @Model.Result.RetrievedContexts[i]
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Không tìm thấy tài liệu liên quan.</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -29,6 +29,8 @@ namespace BussinessLayer
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IRAGEvaluationService, RAGEvaluationService>();
+            services.AddScoped<IBenchmarkService, BenchmarkService>();
             services.AddSingleton<ITokenService, TokenService>();
             return services;
         }

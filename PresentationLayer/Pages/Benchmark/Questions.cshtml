@@ -1,0 +1,123 @@
+@page
+@model PresentationLayer.Pages.Benchmark.QuestionsModel
+@{
+    ViewData["Title"] = "Quản lý Câu hỏi Benchmark";
+}
+
+<style>
+    .q-container { padding: 2rem; max-width: 1200px; margin: 0 auto; height: 100%; overflow-y: auto; }
+    .q-container::-webkit-scrollbar { width: 4px; }
+    .q-container::-webkit-scrollbar-track { background: transparent; }
+    .q-container::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+    .header-actions { margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; }
+    .btn-back { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: var(--transition); background: var(--bg-elevated); padding: 0.5rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .btn-back:hover { color: var(--text-primary); border-color: var(--accent); }
+    
+    .q-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.5rem; }
+    .q-card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .q-card-title { font-size: 1.1rem; color: var(--text-primary); font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.75rem; }
+    .q-card-title i { color: var(--accent); }
+    
+    .table-custom { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .table-custom th, .table-custom td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    .table-custom th { background: var(--bg-elevated); color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.8rem; }
+    .table-custom tr:hover td { background: var(--bg-hover); }
+    .table-custom tr:last-child td { border-bottom: none; }
+    
+    .btn-danger { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.4rem 0.75rem; background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.3); border-radius: var(--radius-sm); color: var(--accent-danger); font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all var(--transition); text-decoration: none; }
+    .btn-danger:hover { background: var(--accent-danger); color: #fff; box-shadow: 0 4px 12px rgba(255, 77, 109, 0.3); border-color: var(--accent-danger); }
+    
+    .alert { padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.75rem; }
+    .alert-success { background: rgba(0, 212, 170, 0.1); border: 1px solid rgba(0, 212, 170, 0.2); color: var(--accent-2); }
+    .alert-danger { background: rgba(255, 77, 109, 0.1); border: 1px solid rgba(255, 77, 109, 0.2); color: var(--accent-danger); }
+    
+    .q-text { font-weight: 500; color: var(--text-primary); margin-bottom: 0.5rem; }
+    .gt-text { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+    
+    .diff-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 600; font-size: 0.75rem; background: var(--bg-elevated); border: 1px solid var(--border); text-transform: capitalize; }
+</style>
+
+<div class="q-container">
+    <div class="header-actions">
+        <a href="/Benchmark" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại</a>
+        <a href="/Benchmark/Import?subjectId=@Model.SubjectId" class="btn-back" style="border-color: rgba(108, 99, 255, 0.5); color: var(--accent);"><i class="fa-solid fa-plus"></i> Thêm mới (Import)</a>
+    </div>
+
+    @if(TempData["Message"] != null)
+    {
+        <div class="alert alert-success">
+            <i class="fa-solid fa-check-circle"></i>
+            <div>@TempData["Message"]</div>
+        </div>
+    }
+    @if(TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>@TempData["Error"]</div>
+        </div>
+    }
+
+    <div class="q-card">
+        <div class="q-card-header">
+            <div class="q-card-title">
+                <i class="fa-solid fa-list-check"></i> Danh sách Câu hỏi Benchmark - @Model.Subject?.Code
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+                Tổng cộng: <strong>@Model.Questions.Count()</strong> câu
+            </div>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">ID</th>
+                        <th>Nội dung Câu hỏi & Đáp án mẫu</th>
+                        <th style="text-align: center; width: 120px;">Độ khó</th>
+                        <th style="text-align: center; width: 100px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Questions.Any())
+                    {
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                Môn học này chưa có câu hỏi Benchmark nào.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var q in Model.Questions)
+                        {
+                            <tr>
+                                <td>@q.Id</td>
+                                <td>
+                                    <div class="q-text">@q.Question</div>
+                                    <div class="gt-text"><strong>Đáp án mẫu:</strong> @q.GroundTruth</div>
+                                    <details style="margin-top: 0.5rem; cursor: pointer; font-size: 0.75rem;">
+                                        <summary style="font-weight: 500; color: var(--text-secondary); outline: none;">Xem Tài liệu Context gốc</summary>
+                                        <div style="padding: 0.75rem; background: var(--bg-elevated); border-radius: 4px; margin-top: 0.5rem; color: var(--text-muted); white-space: pre-wrap; max-height: 150px; overflow-y: auto;">@(string.IsNullOrEmpty(q.ReferenceContext) ? "Không có Context." : q.ReferenceContext)</div>
+                                    </details>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span class="diff-badge">@(string.IsNullOrEmpty(q.Difficulty) ? "normal" : q.Difficulty)</span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <form method="post" asp-page-handler="Delete">
+                                        <input type="hidden" name="questionId" value="@q.Id" />
+                                        <button type="submit" class="btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này? Toàn bộ kết quả chạy benchmark cũ liên quan đến câu hỏi này cũng sẽ bị xóa!');">
+                                            <i class="fa-solid fa-trash-can"></i> Xóa
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

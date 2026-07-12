@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Trợ Lý Học Tập RAG AI Assistant - Hướng Dẫn Cài Đặt và Sử Dụng
 
 Chào mừng bạn đến với **RAG AI Assistant**, ứng dụng web hỗ trợ học tập thông minh sử dụng mô hình ngôn ngữ lớn (LLM) và kỹ thuật RAG (Retrieval-Augmented Generation). Dự án được phát triển trên nền tảng **C# .NET Core** với kiến trúc 3 lớp (Three-Layer Architecture): Presentation, Business và Data Access.
@@ -119,6 +118,3 @@ Hệ thống sẽ tự động khởi tạo (seed) dữ liệu ban đầu khi b�
 ### 3. Đăng ký & Đăng nhập vai trò Sinh viên (Student)
 - Sinh viên có thể tự do đăng ký tài khoản mới trực tiếp trên trang đăng ký (`/Auth/Register`).
 - Sinh viên được quyền vào phòng chat, chọn môn học và thực hiện hỏi đáp trực tiếp với trợ lý AI dựa trên tài liệu môn học đó đã được giảng viên tải lên.
-=======
-# PRN222_GROUP_PROJECT
->>>>>>> ffd9614e5ba453d033a0c199d6ed8f5d6e04e6de

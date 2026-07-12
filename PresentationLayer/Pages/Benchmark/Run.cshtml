@@ -1,0 +1,191 @@
+@page
+@model PresentationLayer.Pages.Benchmark.RunModel
+@{
+    ViewData["Title"] = "Chạy Benchmark";
+}
+
+<style>
+    .run-container { padding: 2rem; max-width: 800px; margin: 0 auto; }
+    .header-actions { margin-bottom: 2rem; }
+    .btn-back { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: var(--transition); background: var(--bg-elevated); padding: 0.5rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .btn-back:hover { color: var(--text-primary); border-color: var(--accent); }
+    
+    .run-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .run-card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); }
+    .run-card-header h4 { font-size: 1.1rem; color: var(--text-primary); font-weight: 600; margin: 0; }
+    .run-card-body { padding: 1.5rem; }
+    
+    .form-group { margin-bottom: 1.5rem; }
+    .form-label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem; }
+    .form-control { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); padding: 0.75rem 1rem; font-family: 'Inter', sans-serif; transition: all var(--transition); }
+    .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    
+    .alert-info { background: rgba(0, 212, 170, 0.1); border: 1px solid rgba(0, 212, 170, 0.2); border-left: 4px solid var(--accent-2); padding: 1rem; border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5; }
+    
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, var(--accent), #a78bfa); border: none; border-radius: var(--radius-sm); color: #fff; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all var(--transition); box-shadow: 0 4px 16px var(--accent-glow); width: auto; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--accent-glow); }
+    .btn-success { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, var(--accent-2), #00b090); border: none; border-radius: var(--radius-sm); color: #fff; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all var(--transition); text-decoration: none; box-shadow: 0 4px 16px var(--accent-2-glow); }
+    .btn-success:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--accent-2-glow); color: #fff; }
+    
+    .status-text { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; }
+    
+    .progress-bar-bg { height: 12px; background: var(--bg-elevated); border-radius: 999px; overflow: hidden; margin-bottom: 1.5rem; border: 1px solid var(--border); }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px; transition: width 0.3s ease; width: 0%; box-shadow: 0 0 10px var(--accent-glow); }
+    
+    .logs-container { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; max-height: 250px; overflow-y: auto; font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
+    .logs-container::-webkit-scrollbar { width: 4px; }
+    .logs-container::-webkit-scrollbar-track { background: transparent; }
+    .logs-container::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+    .log-success { color: var(--accent-2); }
+    .log-error { color: var(--accent-danger); }
+</style>
+
+<div class="run-container">
+    <div class="header-actions">
+        <a href="/Benchmark" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại</a>
+    </div>
+
+    <div class="run-card">
+        <div class="run-card-header">
+            <h4>Khởi Tạo Đợt Benchmark</h4>
+        </div>
+        <div class="run-card-body">
+            @if(Model.ExperimentRun == null)
+            {
+                <form method="post">
+                    <input type="hidden" name="SubjectId" value="@Model.SubjectId" />
+                    <div class="form-group">
+                        <label class="form-label">Tên Lượt Chạy (Run Name):</label>
+                        <input type="text" name="RunName" class="form-control" required placeholder="VD: Test Gemini với chunk 1000..." />
+                    </div>
+                    <div class="alert-info">
+                        <strong>Lưu ý:</strong> Sẽ có @Model.QuestionIds.Count câu hỏi được đánh giá. Quá trình này mất khoảng @(Model.QuestionIds.Count * 5) giây.
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fa-solid fa-play"></i> Bắt đầu Benchmark
+                    </button>
+                </form>
+            }
+            else
+            {
+                <!-- Dòng này QUAN TRỌNG: inject token vào trang để Javascript đọc được khi gửi POST AJAX -->
+                @Html.AntiForgeryToken()
+
+                <div id="progress-container">
+                    <div class="status-text" id="status-text">Đang đánh giá câu hỏi 1 / @Model.QuestionIds.Count...</div>
+                    <div class="progress-bar-bg">
+                        <div id="progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+                    </div>
+                    <div id="logs" class="logs-container">
+                    </div>
+                </div>
+
+                <div id="finish-container" style="display: none; margin-top: 1.5rem; text-align: center;">
+                    <a href="/Benchmark/Result?runId=@Model.ExperimentRun.Id" class="btn-success">
+                        <i class="fa-solid fa-chart-bar"></i> Xem kết quả chi tiết
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if(Model.ExperimentRun != null)
+{
+    @section Scripts {
+        <script>
+            // Lấy CSRF Token để POST
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            const questionIds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.QuestionIds));
+            const runId = @Model.ExperimentRun.Id;
+            let currentIndex = 0;
+
+            async function evaluateNext() {
+                if (currentIndex >= questionIds.length) {
+                    finishRun();
+                    return;
+                }
+
+                const qId = questionIds[currentIndex];
+                logMessage(`Đang chấm điểm câu ${currentIndex + 1}/${questionIds.length} (ID: ${qId})...`);
+
+                try {
+                    const response = await fetch('/Benchmark/Run?handler=Evaluate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': token
+                        },
+                        body: `runId=${runId}&questionId=${qId}`
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            logMessage(`✅ Câu ${currentIndex + 1} hoàn thành!`, 'success');
+                        } else {
+                            logMessage(`❌ Lỗi ở câu ${currentIndex + 1}: ${result.error}`, 'error');
+                        }
+                    } else {
+                        logMessage(`❌ Lỗi kết nối HTTP (Mã lỗi: ${response.status}) ở câu ${currentIndex + 1}`, 'error');
+                    }
+                } catch (error) {
+                    logMessage(`❌ Exception mạng ở câu ${currentIndex + 1}: ${error}`, 'error');
+                }
+
+                currentIndex++;
+                updateProgress();
+                evaluateNext(); // Gọi đệ quy cho câu tiếp theo
+            }
+
+            async function finishRun() {
+                logMessage("Đang tính điểm trung bình và lưu kết quả...");
+                document.getElementById('status-text').innerText = "Đang tổng hợp kết quả...";
+                try {
+                    const response = await fetch('/Benchmark/Run?handler=Finish', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': token
+                        },
+                        body: `runId=${runId}`
+                    });
+                    
+                    if(response.ok) {
+                        logMessage("🎉 HOÀN TẤT BENCHMARK!", 'success');
+                        document.getElementById('status-text').innerText = "Đã hoàn tất toàn bộ!";
+                        document.getElementById('finish-container').style.display = 'block';
+                    } else {
+                         logMessage(`❌ Lỗi khi tính điểm tổng kết (Mã HTTP: ${response.status}).`, 'error');
+                         document.getElementById('finish-container').style.display = 'block';
+                    }
+                } catch(e) {
+                    logMessage("❌ Lỗi mạng khi tính điểm tổng kết.", 'error');
+                    document.getElementById('finish-container').style.display = 'block';
+                }
+            }
+
+            function updateProgress() {
+                const percent = Math.round((currentIndex / questionIds.length) * 100);
+                const bar = document.getElementById('progress-bar');
+                bar.style.width = percent + '%';
+                document.getElementById('status-text').innerText = `Đang đánh giá câu hỏi ${currentIndex + 1} / ${questionIds.length}...`;
+            }
+
+            function logMessage(msg, type = 'normal') {
+                const logs = document.getElementById('logs');
+                let colorClass = '';
+                if (type === 'success') colorClass = 'log-success';
+                if (type === 'error') colorClass = 'log-error';
+                
+                logs.innerHTML += `<div class="${colorClass}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+                logs.scrollTop = logs.scrollHeight;
+            }
+
+            // Bắt đầu chạy ngay khi load trang
+            window.onload = () => {
+                evaluateNext();
+            };
+        </script>
+    }
+}
