@@ -65,7 +65,7 @@
                 <i class="fa-solid fa-list-check"></i> Danh sách Câu hỏi Benchmark - @Model.Subject?.Code
             </div>
             <div style="font-size: 0.85rem; color: var(--text-muted);">
-                Tổng cộng: <strong>@Model.Questions.Count()</strong> câu
+                Tổng cộng: <strong>@(Model.Questions?.Count() ?? 0)</strong> câu
             </div>
         </div>
         
@@ -80,7 +80,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (!Model.Questions.Any())
+                    @if (Model.Questions == null || !Model.Questions.Any())
                     {
                         <tr>
                             <td colspan="4" style="text-align: center; padding: 3rem; color: var(--text-muted);">
