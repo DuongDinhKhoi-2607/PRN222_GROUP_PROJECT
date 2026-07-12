@@ -19,6 +19,12 @@ public partial class User
 
     public bool? IsActive { get; set; }
 
+    public int AvailableTokens { get; set; } = 20;
+
+    public DateTime LastTokenUpdateTime { get; set; } = DateTime.UtcNow;
+
+    public bool IsPro { get; set; } = false;
+
     public virtual ICollection<ChatSession> ChatSessions { get; set; } = new List<ChatSession>();
 
     public virtual ICollection<Document> Documents { get; set; } = new List<Document>();

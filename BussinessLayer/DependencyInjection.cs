@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using DataAccessLayer;
 using BussinessLayer.Interfaces;
 using BussinessLayer.Services;
+using BussinessLayer.Services.VNPay;
 
 namespace BussinessLayer
 {
@@ -32,6 +33,7 @@ namespace BussinessLayer
             services.AddScoped<IRAGEvaluationService, RAGEvaluationService>();
             services.AddScoped<IBenchmarkService, BenchmarkService>();
             services.AddSingleton<ITokenService, TokenService>();
+            services.AddScoped<IVnPayService, VnPayService>();
             return services;
         }
     }

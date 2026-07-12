@@ -115,5 +115,66 @@ namespace BussinessLayer.Services
 
             return PasswordHelper.VerifyPassword("1234@AbcD", user.PasswordHash);
         }
+
+        private async Task CheckAndRegenerateTokensAsync(User user)
+        {
+            if (user.IsPro) return; // Pro doesn't need regeneration limits
+
+            var now = DateTime.UtcNow;
+            var elapsedMinutes = (now - user.LastTokenUpdateTime).TotalMinutes;
+            if (elapsedMinutes >= 20)
+            {
+                int tokensToAdd = (int)(elapsedMinutes / 20);
+                user.AvailableTokens += tokensToAdd;
+                
+                // Soft cap at 20 tokens for free users
+                if (user.AvailableTokens > 20)
+                {
+                    user.AvailableTokens = 20;
+                }
+                
+                // Update the last token update time by adding the chunks of 20 mins
+                user.LastTokenUpdateTime = user.LastTokenUpdateTime.AddMinutes(tokensToAdd * 20);
+                await _userRepo.UpdateAsync(user);
+            }
+        }
+
+        public async Task<(int AvailableTokens, bool IsPro)> GetUserTokenInfoAsync(long userId)
+        {
+            var user = await _userRepo.GetByIdAsync(userId);
+            if (user == null) return (0, false);
+
+            await CheckAndRegenerateTokensAsync(user);
+            return (user.AvailableTokens, user.IsPro);
+        }
+
+        public async Task<bool> DeductTokenAsync(long userId, int amount = 4)
+        {
+            var user = await _userRepo.GetByIdAsync(userId);
+            if (user == null) return false;
+
+            if (user.IsPro) return true; // Pro users have unlimited access
+
+            await CheckAndRegenerateTokensAsync(user);
+
+            if (user.AvailableTokens >= amount)
+            {
+                user.AvailableTokens -= amount;
+                await _userRepo.UpdateAsync(user);
+                return true;
+            }
+
+            return false;
+        }
+
+        public async Task<bool> UpgradeToProAsync(long userId)
+        {
+            var user = await _userRepo.GetByIdAsync(userId);
+            if (user == null) return false;
+
+            user.IsPro = true;
+            await _userRepo.UpdateAsync(user);
+            return true;
+        }
     }
 }

@@ -24,6 +24,9 @@ namespace BussinessLayer.DTOs
 
         [Display(Name = "Kích hoạt")]
         public bool? IsActive { get; set; }
+
+        public int AvailableTokens { get; set; }
+        public bool IsPro { get; set; }
     }
 
     public class LoginDto

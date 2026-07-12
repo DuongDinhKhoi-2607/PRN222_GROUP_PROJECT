@@ -19,19 +19,22 @@ namespace PresentationLayer.Pages.Chat
         private readonly ILLMService _llm;
         private readonly IMessageCitationService _citationSvc;
         private readonly ISubjectService _subjectService;
+        private readonly IUserService _userService;
 
         public IndexModel(
             IChatService chat,
             IRetrievalService retrieval,
             ILLMService llm,
             IMessageCitationService citationSvc,
-            ISubjectService subjectService)
+            ISubjectService subjectService,
+            IUserService userService)
         {
             _chat = chat;
             _retrieval = retrieval;
             _llm = llm;
             _citationSvc = citationSvc;
             _subjectService = subjectService;
+            _userService = userService;
         }
 
         public IEnumerable<SubjectDto> Subjects { get; set; } = new List<SubjectDto>();
@@ -68,6 +71,17 @@ namespace PresentationLayer.Pages.Chat
             }
 
             await _chat.AddMessageAsync(sessionId, "user", question);
+
+            // Token Limit Check
+            bool canProceed = await _userService.DeductTokenAsync(userId, 4);
+            if (!canProceed)
+            {
+                var upgradeMsg = "❌ Bạn đã hết Token miễn phí hoặc không đủ 4 Token cho câu hỏi này. " +
+                                 "Mỗi câu hỏi tốn 4 Token và bạn sẽ được hồi 1 Token mỗi 20 phút. " +
+                                 "Vui lòng đợi hoặc [Nâng cấp gói Pro](/Upgrade) để sử dụng không giới hạn!";
+                await _chat.AddMessageAsync(sessionId, "assistant", upgradeMsg);
+                return RedirectToPage("Session", new { id = sessionId });
+            }
 
             var contexts = await _retrieval.RetrieveAsync(question, null);
             var (answer, citations) = await _llm.GenerateAnswerAsync(question, contexts, null);

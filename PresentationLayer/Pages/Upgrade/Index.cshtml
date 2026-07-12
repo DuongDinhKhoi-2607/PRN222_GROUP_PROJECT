@@ -1,0 +1,77 @@
+@page
+@model PresentationLayer.Pages.Upgrade.IndexModel
+@{
+    ViewData["Title"] = "Nâng cấp gói Pro";
+}
+
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 style="color: var(--text-primary); font-weight: 700;">Nâng Cấp Trải Nghiệm AI</h1>
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Khám phá toàn bộ sức mạnh của trợ lý học tập AI với gói Pro không giới hạn.</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success text-center">
+            <i class="fa-solid fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="row justify-content-center g-4">
+        <!-- Gói Free -->
+        <div class="col-md-5">
+            <div class="card h-100" style="background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 12px; transition: transform 0.3s ease;">
+                <div class="card-body p-4 d-flex flex-column">
+                    <h3 class="card-title text-center" style="color: var(--text-primary);">Gói Miễn Phí</h3>
+                    <h2 class="text-center my-4" style="color: var(--text-primary);">0đ <span style="font-size: 1rem; color: var(--text-muted);">/ mãi mãi</span></h2>
+                    
+                    <ul class="list-unstyled flex-grow-1" style="color: var(--text-secondary);">
+                        <li class="mb-3"><i class="fa-solid fa-check text-success me-2"></i> Được cấp tối đa 20 Tokens (5 câu hỏi)</li>
+                        <li class="mb-3"><i class="fa-solid fa-check text-success me-2"></i> Hồi 1 Token mỗi 20 phút</li>
+                        <li class="mb-3"><i class="fa-solid fa-check text-success me-2"></i> Truy cập thư viện tài liệu chung</li>
+                        <li class="mb-3"><i class="fa-solid fa-times text-danger me-2"></i> Hỗ trợ ưu tiên</li>
+                    </ul>
+
+                    @if (Model.IsPro)
+                    {
+                        <button class="btn btn-outline-secondary w-100 py-2 mt-auto" disabled style="border-radius: 8px;">Đã dùng gói cao hơn</button>
+                    }
+                    else
+                    {
+                        <button class="btn w-100 py-2 mt-auto" disabled style="background: var(--surface); color: var(--text-muted); border-radius: 8px; border: 1px solid var(--border-color);">Đang sử dụng</button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Gói Pro -->
+        <div class="col-md-5">
+            <div class="card h-100" style="background: linear-gradient(145deg, var(--surface-light), var(--surface)); border: 2px solid var(--primary-color); border-radius: 12px; position: relative; box-shadow: 0 8px 32px rgba(108, 92, 231, 0.2); transition: transform 0.3s ease;">
+                <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--primary-color); color: white; padding: 4px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px;">PHỔ BIẾN NHẤT</div>
+                
+                <div class="card-body p-4 d-flex flex-column">
+                    <h3 class="card-title text-center" style="color: var(--primary-color);"><i class="fa-solid fa-crown me-2"></i>Gói Pro</h3>
+                    <h2 class="text-center my-4" style="color: var(--text-primary);">49,000đ <span style="font-size: 1rem; color: var(--text-muted);">/ tháng</span></h2>
+                    
+                    <ul class="list-unstyled flex-grow-1" style="color: var(--text-secondary);">
+                        <li class="mb-3"><i class="fa-solid fa-infinity text-primary me-2"></i> <strong>Không giới hạn Tokens</strong></li>
+                        <li class="mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i> Tốc độ phản hồi cực nhanh</li>
+                        <li class="mb-3"><i class="fa-solid fa-check text-success me-2"></i> Chat dựa trên tài liệu mới nhất</li>
+                        <li class="mb-3"><i class="fa-solid fa-check text-success me-2"></i> Hỗ trợ kỹ thuật 24/7</li>
+                    </ul>
+
+                    @if (Model.IsPro)
+                    {
+                        <button class="btn btn-success w-100 py-2 mt-auto" disabled style="border-radius: 8px; font-weight: 600;"><i class="fa-solid fa-check-circle me-2"></i>Đang sử dụng Pro</button>
+                    }
+                    else
+                    {
+                        <form method="post" class="mt-auto">
+                            <button type="submit" class="btn w-100 py-2 text-white" style="background: linear-gradient(90deg, #6c5ce7, #a29bfe); border-radius: 8px; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(108,92,231,0.4);"><i class="fa-solid fa-rocket me-2"></i>Nâng Cấp Ngay</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

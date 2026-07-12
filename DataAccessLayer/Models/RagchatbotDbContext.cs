@@ -572,6 +572,15 @@ public partial class RagchatbotDbContext : DbContext
                 .HasMaxLength(20)
                 .IsUnicode(false)
                 .HasColumnName("role");
+            entity.Property(e => e.AvailableTokens)
+                .HasDefaultValue(20)
+                .HasColumnName("available_tokens");
+            entity.Property(e => e.LastTokenUpdateTime)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnName("last_token_update_time");
+            entity.Property(e => e.IsPro)
+                .HasDefaultValue(false)
+                .HasColumnName("is_pro");
         });
 
         OnModelCreatingPartial(modelBuilder);

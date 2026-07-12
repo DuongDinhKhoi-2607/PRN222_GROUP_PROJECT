@@ -1,0 +1,32 @@
+@page
+@model PresentationLayer.Pages.Payment.IndexModel
+@{
+    ViewData["Title"] = "Thanh toán VNPay";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="mb-0">Cổng Thanh Toán VNPay</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted text-center">Vui lòng nhập số tiền để kiểm thử chức năng thanh toán.</p>
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Số tiền (VND):</label>
+                            <input type="number" class="form-control" id="amount" name="amount" required min="10000" step="1000" value="100000">
+                            <div class="form-text">Số tiền thanh toán tối thiểu là 10,000 VND.</div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-credit-card"></i> Thanh Toán với VNPay
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

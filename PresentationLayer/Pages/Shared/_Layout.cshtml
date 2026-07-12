@@ -36,14 +36,25 @@
             _ => "Khách"
         };
 
-        // Kiểm tra xem giảng viên hiện tại có đang sử dụng mật khẩu mặc định của hệ thống không
         var isTempPassword = false;
-        if (roleClaim == "lecturer" && User.Identity?.IsAuthenticated == true)
+        int availableTokens = 0;
+        bool isPro = false;
+
+        if (User.Identity?.IsAuthenticated == true)
         {
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
             if (userIdClaim != null && long.TryParse(userIdClaim.Value, out var userId))
             {
-                isTempPassword = await UserService.IsUsingTempPasswordAsync(userId);
+                if (roleClaim == "lecturer") 
+                {
+                    isTempPassword = await UserService.IsUsingTempPasswordAsync(userId);
+                } 
+                else if (roleClaim == "student") 
+                {
+                    var tokenInfo = await UserService.GetUserTokenInfoAsync(userId);
+                    availableTokens = tokenInfo.AvailableTokens;
+                    isPro = tokenInfo.IsPro;
+                }
             }
         }
     }
@@ -151,6 +162,21 @@
                 </button>
                 <div class="topbar-title">@(ViewData["Title"] ?? "RAG Assistant")</div>
                 <div class="topbar-actions">
+                    @if (roleClaim == "student")
+                    {
+                        <a href="/Upgrade" class="status-badge @(isPro ? "online" : "")" style="text-decoration: none; margin-right: 1rem; @(isPro ? "" : "background: rgba(255,159,67,0.15); border: 1px solid rgba(255,159,67,0.3);")">
+                            @if (isPro)
+                            {
+                                <i class="fa-solid fa-crown" style="color: gold;"></i>
+                                <span style="font-weight: bold; margin-left: 5px;">PRO</span>
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-bolt" style="color: #ff9f43;"></i>
+                                <span style="font-weight: bold; margin-left: 5px; color: #ff9f43;">@availableTokens Tokens | Nâng cấp gói Pro</span>
+                            }
+                        </a>
+                    }
                     <div class="status-badge online">
                         <span class="status-dot"></span>
                         <span>System Online</span>

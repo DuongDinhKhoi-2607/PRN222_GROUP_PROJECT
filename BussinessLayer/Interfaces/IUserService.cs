@@ -16,5 +16,9 @@ namespace BussinessLayer.Interfaces
         Task<bool> DeleteUserAsync(long userId);
         Task<bool> ChangePasswordAsync(long userId, string currentPassword, string newPassword);
         Task<bool> IsUsingTempPasswordAsync(long userId);
+        
+        Task<(int AvailableTokens, bool IsPro)> GetUserTokenInfoAsync(long userId);
+        Task<bool> DeductTokenAsync(long userId, int amount = 4);
+        Task<bool> UpgradeToProAsync(long userId);
     }
 }

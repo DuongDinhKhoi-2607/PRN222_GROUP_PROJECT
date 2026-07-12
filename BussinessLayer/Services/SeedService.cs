@@ -88,6 +88,41 @@ namespace BussinessLayer.Services
                 Console.WriteLine("[Seed] Error hashing existing documents: " + ex.Message);
             }
 
+            // Auto-migration: Add token limit columns to users table if not exists
+            try
+            {
+                await _db.Database.ExecuteSqlRawAsync(@"
+                    IF NOT EXISTS (
+                        SELECT * FROM sys.columns 
+                        WHERE object_id = OBJECT_ID('users') AND name = 'available_tokens'
+                    )
+                    BEGIN
+                        ALTER TABLE users ADD available_tokens INT NOT NULL DEFAULT 20;
+                    END
+
+                    IF NOT EXISTS (
+                        SELECT * FROM sys.columns 
+                        WHERE object_id = OBJECT_ID('users') AND name = 'last_token_update_time'
+                    )
+                    BEGIN
+                        ALTER TABLE users ADD last_token_update_time DATETIME2 NOT NULL DEFAULT GETDATE();
+                    END
+
+                    IF NOT EXISTS (
+                        SELECT * FROM sys.columns 
+                        WHERE object_id = OBJECT_ID('users') AND name = 'is_pro'
+                    )
+                    BEGIN
+                        ALTER TABLE users ADD is_pro BIT NOT NULL DEFAULT 0;
+                    END
+                ");
+                Console.WriteLine("[Seed] Verified token columns in users table");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Seed] Error adding token columns to users: " + ex.Message);
+            }
+
             // 1. ChunkingStrategy id=1
             if (!await _db.ChunkingStrategies.AnyAsync(s => s.Id == 1))
             {
