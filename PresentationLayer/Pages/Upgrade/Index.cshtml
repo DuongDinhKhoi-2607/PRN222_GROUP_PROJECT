@@ -3,71 +3,359 @@
 @{
     ViewData["Title"] = "Nâng cấp gói Pro";
 }
+<style>
+    :root {
+        --text-primary: #ffffff;
+        --text-muted: #a0a0b0;
+        --primary-color: #6c5ce7;
+        --primary-light: #a29bfe;
+        --success-color: #00b894;
+        --danger-color: #d63031;
+    }
 
-<div class="container mt-5">
-    <div class="text-center mb-5">
-        <h1 style="color: var(--text-primary); font-weight: 700;">Nâng Cấp Trải Nghiệm AI</h1>
-        <p style="color: var(--text-muted); font-size: 1.1rem;">Khám phá toàn bộ sức mạnh của trợ lý học tập AI với gói Pro không giới hạn.</p>
+    .upgrade-page {
+        padding: 3rem 0;
+        position: relative;
+        z-index: 1;
+        max-width: 850px;
+        margin: 0 auto;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .page-header-glow {
+        position: absolute;
+        top: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(108,92,231,0.15) 0%, rgba(0,0,0,0) 60%);
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .page-title {
+        font-size: 2.4rem;
+        font-weight: 800;
+        background: linear-gradient(to right, #ffffff, #a29bfe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.5px;
+        text-align: center;
+    }
+
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 1.05rem;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+        text-align: center;
+    }
+
+    .pricing-wrapper {
+        display: flex;
+        flex-direction: row;
+        gap: 2rem;
+        justify-content: center;
+        align-items: stretch;
+        width: 100%;
+        margin-top: 2.5rem;
+    }
+
+    .pricing-card-container {
+        flex: 1;
+        min-width: 280px;
+        max-width: 380px;
+        display: flex;
+    }
+
+    .pricing-card {
+        background: rgba(30, 30, 35, 0.4);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 2.5rem 2rem;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        /* Chú ý: TUYỆT ĐỐI KHÔNG dùng overflow: hidden ở đây để huy hiệu được tự do nổi lên */
+    }
+
+    .pricing-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .pricing-card.pro {
+        background: linear-gradient(165deg, rgba(108, 92, 231, 0.08) 0%, rgba(22, 22, 28, 0.9) 100%);
+        border: 1px solid rgba(108, 92, 231, 0.4);
+        box-shadow: 0 10px 30px rgba(108, 92, 231, 0.15);
+    }
+
+    /* Đã Fix Bằng CSS Masking - Xịn sò và chuẩn bo góc 100% */
+    .pricing-card.pro::before {
+        content: '';
+        position: absolute;
+        inset: -1px; /* Trùm khít ra ngoài đường viền 1px của thẻ cha */
+        border-radius: 24px; /* Bo góc y hệt thẻ cha */
+        padding-top: 4px; /* Độ dày của phần viền muốn hiển thị trên đỉnh */
+        background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+        
+        /* Tuyệt chiêu CSS Masking: Đục lỗ phần ruột, chỉ giữ lại phần padding 4px trên cùng */
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none; /* Không cản trở click chuột vào thẻ */
+    }
+
+    .pricing-card.pro:hover {
+        box-shadow: 0 15px 35px rgba(108, 92, 231, 0.25);
+        border-color: rgba(108, 92, 231, 0.6);
+    }
+
+    .popular-badge {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(90deg, #ff9f43, #ff6b6b);
+        color: white;
+        padding: 5px 20px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        border-radius: 20px;
+        box-shadow: 0 4px 10px rgba(255, 107, 107, 0.4);
+        letter-spacing: 1px;
+        z-index: 10;
+    }
+
+    .pricing-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .pricing-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .pricing-title.pro {
+        background: linear-gradient(90deg, #a29bfe, #6c5ce7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+    }
+
+    .pricing-price {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .pricing-period {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+
+    .pricing-features {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 2rem 0;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1.1rem;
+    }
+
+    .pricing-features li {
+        color: #e0e0e0;
+        display: flex;
+        align-items: flex-start;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+
+    .pricing-features li i {
+        margin-right: 12px;
+        font-size: 1rem;
+        width: 20px;
+        text-align: center;
+        margin-top: 2px;
+    }
+
+    .pricing-features li i.fa-check {
+        color: var(--success-color);
+    }
+
+    .pricing-features li i.fa-times {
+        color: var(--danger-color);
+        opacity: 0.5;
+    }
+
+    .pricing-features li.disabled {
+        opacity: 0.5;
+    }
+
+    .btn-upgrade {
+        border-radius: 12px;
+        padding: 14px 20px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        width: 100%;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px; 
+    }
+
+    .btn-upgrade-free {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-muted);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-upgrade-free:not([disabled]):hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .btn-upgrade-pro {
+        background: linear-gradient(135deg, #6c5ce7, #8e44ad);
+        color: white;
+        box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+
+    .btn-upgrade-pro:hover {
+        background: linear-gradient(135deg, #8e44ad, #6c5ce7);
+        box-shadow: 0 6px 20px rgba(108, 92, 231, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .btn-upgrade-pro:active {
+        transform: translateY(1px);
+    }
+
+    .btn-current-pro {
+        color: var(--success-color);
+        border: 1px solid rgba(0, 184, 148, 0.3);
+        background: rgba(0, 184, 148, 0.1);
+    }
+
+    @@media (max-width: 768px) {
+        .pricing-wrapper {
+            flex-direction: column;
+            align-items: center;
+            gap: 2.5rem;
+        }
+
+        .pricing-card-container {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .popular-badge {
+            top: -14px;
+        }
+    }
+</style>
+
+<div class="upgrade-page container">
+    <div class="page-header-glow"></div>
+
+    <div class="text-center mb-5 pb-2">
+        <h1 class="page-title">Nâng Cấp Trải Nghiệm AI</h1>
+        <p class="page-subtitle">Khám phá toàn bộ sức mạnh của trợ lý học tập AI với gói Pro không giới hạn.</p>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success text-center">
+        <div class="alert alert-success text-center shadow-lg mb-5" style="border-radius: 12px; background: rgba(0, 184, 148, 0.1); border: 1px solid rgba(0, 184, 148, 0.3); color: var(--success-color); backdrop-filter: blur(8px); padding: 12px;">
             <i class="fa-solid fa-check-circle me-2"></i> @TempData["SuccessMessage"]
         </div>
     }
 
-    <div class="row justify-content-center g-4">
-        <!-- Gói Free -->
-        <div class="col-md-5">
-            <div class="card h-100" style="background: var(--surface-light); border: 1px solid var(--border-color); border-radius: 12px; transition: transform 0.3s ease;">
-                <div class="card-body p-4 d-flex flex-column">
-                    <h3 class="card-title text-center" style="color: var(--text-primary);">Gói Miễn Phí</h3>
-                    <h2 class="text-center my-4" style="color: var(--text-primary);">0đ <span style="font-size: 1rem; color: var(--text-muted);">/ mãi mãi</span></h2>
-                    
-                    <ul class="list-unstyled flex-grow-1" style="color: var(--text-secondary);">
-                        <li class="mb-3"><i class="fa-solid fa-check text-success me-2"></i> Được cấp tối đa 20 Tokens (5 câu hỏi)</li>
-                        <li class="mb-3"><i class="fa-solid fa-check text-success me-2"></i> Hồi 1 Token mỗi 20 phút</li>
-                        <li class="mb-3"><i class="fa-solid fa-check text-success me-2"></i> Truy cập thư viện tài liệu chung</li>
-                        <li class="mb-3"><i class="fa-solid fa-times text-danger me-2"></i> Hỗ trợ ưu tiên</li>
-                    </ul>
+    <div class="pricing-wrapper">
+        <!-- Gói Miễn Phí -->
+        <div class="pricing-card-container">
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <div class="pricing-title">Gói Cơ Bản</div>
+                    <div class="pricing-price">0đ</div>
+                    <div class="pricing-period">Sử dụng mãi mãi</div>
+                </div>
 
+                <ul class="pricing-features">
+                    <li><i class="fa-solid fa-check"></i> Được cấp tối đa 20 Tokens</li>
+                    <li><i class="fa-solid fa-check"></i> Phục hồi 1 Token mỗi 20 phút</li>
+                    <li><i class="fa-solid fa-check"></i> Truy cập thư viện tài liệu chung</li>
+                    <li class="disabled"><i class="fa-solid fa-times"></i> Tốc độ phản hồi cực nhanh</li>
+                    <li class="disabled"><i class="fa-solid fa-times"></i> Hỗ trợ kỹ thuật ưu tiên</li>
+                </ul>
+
+                <div class="mt-auto">
                     @if (Model.IsPro)
                     {
-                        <button class="btn btn-outline-secondary w-100 py-2 mt-auto" disabled style="border-radius: 8px;">Đã dùng gói cao hơn</button>
+                        <button class="btn-upgrade btn-upgrade-free" disabled>Đã dùng gói cao hơn</button>
                     }
                     else
                     {
-                        <button class="btn w-100 py-2 mt-auto" disabled style="background: var(--surface); color: var(--text-muted); border-radius: 8px; border: 1px solid var(--border-color);">Đang sử dụng</button>
+                        <button class="btn-upgrade btn-upgrade-free" disabled>Đang sử dụng</button>
                     }
                 </div>
             </div>
         </div>
 
         <!-- Gói Pro -->
-        <div class="col-md-5">
-            <div class="card h-100" style="background: linear-gradient(145deg, var(--surface-light), var(--surface)); border: 2px solid var(--primary-color); border-radius: 12px; position: relative; box-shadow: 0 8px 32px rgba(108, 92, 231, 0.2); transition: transform 0.3s ease;">
-                <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--primary-color); color: white; padding: 4px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; letter-spacing: 1px;">PHỔ BIẾN NHẤT</div>
-                
-                <div class="card-body p-4 d-flex flex-column">
-                    <h3 class="card-title text-center" style="color: var(--primary-color);"><i class="fa-solid fa-crown me-2"></i>Gói Pro</h3>
-                    <h2 class="text-center my-4" style="color: var(--text-primary);">49,000đ <span style="font-size: 1rem; color: var(--text-muted);">/ tháng</span></h2>
-                    
-                    <ul class="list-unstyled flex-grow-1" style="color: var(--text-secondary);">
-                        <li class="mb-3"><i class="fa-solid fa-infinity text-primary me-2"></i> <strong>Không giới hạn Tokens</strong></li>
-                        <li class="mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i> Tốc độ phản hồi cực nhanh</li>
-                        <li class="mb-3"><i class="fa-solid fa-check text-success me-2"></i> Chat dựa trên tài liệu mới nhất</li>
-                        <li class="mb-3"><i class="fa-solid fa-check text-success me-2"></i> Hỗ trợ kỹ thuật 24/7</li>
-                    </ul>
+        <div class="pricing-card-container">
+            <div class="pricing-card pro">
+                <div class="popular-badge">PHỔ BIẾN</div>
 
+                <div class="pricing-header">
+                    <div class="pricing-title pro"><i class="fa-solid fa-crown"></i>Gói Pro</div>
+                    <div class="pricing-price">49K</div>
+                    <div class="pricing-period">Thanh toán mỗi tháng</div>
+                </div>
+
+                <ul class="pricing-features">
+                    <li><i class="fa-solid fa-infinity" style="color: var(--primary-light);"></i> <strong style="color: white;">Không giới hạn Tokens</strong></li>
+                    <li><i class="fa-solid fa-bolt" style="color: #ff9f43;"></i> Tốc độ phản hồi cực nhanh</li>
+                    <li><i class="fa-solid fa-check"></i> Chat dựa trên tài liệu mới nhất</li>
+                    <li><i class="fa-solid fa-check"></i> Ưu tiên hỗ trợ kỹ thuật 24/7</li>
+                    <li><i class="fa-solid fa-check"></i> Trải nghiệm không quảng cáo</li>
+                </ul>
+
+                <div class="mt-auto">
                     @if (Model.IsPro)
                     {
-                        <button class="btn btn-success w-100 py-2 mt-auto" disabled style="border-radius: 8px; font-weight: 600;"><i class="fa-solid fa-check-circle me-2"></i>Đang sử dụng Pro</button>
+                        <button class="btn-upgrade btn-current-pro" disabled>
+                            <i class="fa-solid fa-check-circle"></i>Đang sử dụng Pro
+                        </button>
                     }
                     else
                     {
-                        <form method="post" class="mt-auto">
-                            <button type="submit" class="btn w-100 py-2 text-white" style="background: linear-gradient(90deg, #6c5ce7, #a29bfe); border-radius: 8px; border: none; font-weight: 600; box-shadow: 0 4px 15px rgba(108,92,231,0.4);"><i class="fa-solid fa-rocket me-2"></i>Nâng Cấp Ngay</button>
+                        <form method="post" asp-page="/Upgrade/Index">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-upgrade btn-upgrade-pro">
+                                <i class="fa-solid fa-rocket"></i>Nâng Cấp Ngay
+                            </button>
                         </form>
                     }
                 </div>

@@ -46,7 +46,7 @@ namespace PresentationLayer.Pages.Upgrade
             // Create VNPay payment URL for Pro package (49,000 VND)
             var model = new PaymentInformationModel
             {
-                OrderID = new Random().Next(1000, 99999), 
+                OrderID = new Random().Next(1000, 99999),
                 Amount = 49000,
                 Name = $"Upgrade_Pro_{userId}_{DateTime.Now.Ticks}",
                 OrderDescription = $"Upgrade to Pro plan for user {userId}",
