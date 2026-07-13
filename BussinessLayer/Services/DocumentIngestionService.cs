@@ -75,7 +75,7 @@ namespace BussinessLayer.Services
             await _docRepo.AddAsync(doc);
 
             // Chunk and embed
-            var chunks = _chunker.Chunk(text, 1000);
+            var chunks = _chunker.Chunk(text, 1);
             foreach (var dto in chunks)
             {
                 var chunk = new DocumentChunk

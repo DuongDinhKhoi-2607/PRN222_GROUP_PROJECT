@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using BussinessLayer.Interfaces;
 using DataAccessLayer.Models;
+using DataAccessLayer;
 
 namespace PresentationLayer.Pages.Benchmark
 {
@@ -14,10 +16,12 @@ namespace PresentationLayer.Pages.Benchmark
     public class RunModel : PageModel
     {
         private readonly IBenchmarkService _benchmarkService;
+        private readonly RagchatbotDbContext _db;
 
-        public RunModel(IBenchmarkService benchmarkService)
+        public RunModel(IBenchmarkService benchmarkService, RagchatbotDbContext db)
         {
             _benchmarkService = benchmarkService;
+            _db = db;
         }
 
         [BindProperty(SupportsGet = true)]
@@ -25,6 +29,7 @@ namespace PresentationLayer.Pages.Benchmark
         
         public ExperimentRun? ExperimentRun { get; set; }
         public List<long> QuestionIds { get; set; } = new List<long>();
+        public List<ChunkingStrategy> Strategies { get; set; } = new List<ChunkingStrategy>();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -35,15 +40,18 @@ namespace PresentationLayer.Pages.Benchmark
                 TempData["Error"] = "Môn học này chưa có câu hỏi nào. Vui lòng import câu hỏi trước khi chạy Benchmark.";
                 return RedirectToPage("Index");
             }
+
+            Strategies = await _db.ChunkingStrategies.ToListAsync();
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(string RunName)
+        public async Task<IActionResult> OnPostAsync(string RunName, long chunkingStrategyId)
         {
             var questions = await _benchmarkService.GetTestQuestionsAsync(SubjectId);
             QuestionIds = questions.Select(q => q.Id).ToList();
+            Strategies = await _db.ChunkingStrategies.ToListAsync();
             
-            ExperimentRun = await _benchmarkService.CreateExperimentRunAsync(RunName, SubjectId);
+            ExperimentRun = await _benchmarkService.CreateExperimentRunAsync(RunName, SubjectId, chunkingStrategyId);
             
             return Page();
         }

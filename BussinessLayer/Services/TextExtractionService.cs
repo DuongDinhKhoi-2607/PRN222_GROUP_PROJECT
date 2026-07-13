@@ -27,7 +27,7 @@ namespace BussinessLayer.Services
         private static string ExtractTextFromDocx(string path)
         {
             using var doc = WordprocessingDocument.Open(path, false);
-            var body = doc.MainDocumentPart?.Document.Body;
+            var body = doc.MainDocumentPart?.Document?.Body;
             return body?.InnerText ?? string.Empty;
         }
     }

@@ -14,6 +14,7 @@ namespace BussinessLayer.Interfaces
             string question,
             long? subjectId = null,
             int topK = 15,
-            float minScore = 0.1f);
+            float minScore = 0.1f,
+            long? strategyId = null);
     }
 }

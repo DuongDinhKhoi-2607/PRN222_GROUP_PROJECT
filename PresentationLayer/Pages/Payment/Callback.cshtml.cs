@@ -14,7 +14,7 @@ namespace PresentationLayer.Pages.Payment
         private readonly IVnPayService _vnPayService;
         private readonly IUserService _userService;
 
-        public PaymentResponseModel ResponseModel { get; set; }
+        public PaymentResponseModel ResponseModel { get; set; } = null!;
 
         public CallbackModel(IVnPayService vnPayService, IUserService userService)
         {

@@ -1,3 +1,4 @@
+#pragma warning disable SYSLIB0060
 using System;
 using System.Security.Cryptography;
 

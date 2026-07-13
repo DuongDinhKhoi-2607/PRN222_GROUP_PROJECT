@@ -29,7 +29,7 @@ namespace BussinessLayer.Services
             _httpClient.Timeout = TimeSpan.FromSeconds(120);
         }
 
-        public async Task<RAGEvaluationResultDto> EvaluateAsync(string question, string expectedAnswer, long? subjectId = null)
+        public async Task<RAGEvaluationResultDto> EvaluateAsync(string question, string expectedAnswer, long? subjectId = null, long? strategyId = null)
         {
             var result = new RAGEvaluationResultDto
             {
@@ -40,7 +40,7 @@ namespace BussinessLayer.Services
             var sw = Stopwatch.StartNew();
 
             // 1. Retrieve Contexts
-            var contexts = await _retrievalService.RetrieveAsync(question, subjectId);
+            var contexts = await _retrievalService.RetrieveAsync(question, subjectId, strategyId: strategyId);
             result.RetrievedContexts = contexts.Select(c => c.Chunk.Content).ToList();
 
             // 2. Generate Answer

@@ -123,7 +123,7 @@ namespace BussinessLayer.Services
                 Console.WriteLine("[Seed] Error adding token columns to users: " + ex.Message);
             }
 
-            // 1. ChunkingStrategy id=1
+            // 1. ChunkingStrategy id=1, 2, 3
             if (!await _db.ChunkingStrategies.AnyAsync(s => s.Id == 1))
             {
                 await _db.Database.ExecuteSqlRawAsync(@"
@@ -132,6 +132,24 @@ namespace BussinessLayer.Services
                     VALUES (1, 'Fixed-size (1000 tokens)', 1000, 100, 'Default fixed-size chunking strategy');
                     SET IDENTITY_INSERT chunking_strategies OFF;");
                 Console.WriteLine("[Seed] Created default ChunkingStrategy (id=1)");
+            }
+            if (!await _db.ChunkingStrategies.AnyAsync(s => s.Id == 2))
+            {
+                await _db.Database.ExecuteSqlRawAsync(@"
+                    SET IDENTITY_INSERT chunking_strategies ON;
+                    INSERT INTO chunking_strategies (id, name, chunk_size, chunk_overlap, description)
+                    VALUES (2, 'Recursive Character (500 chars)', 500, 50, 'Recursive character chunking strategy with separators');
+                    SET IDENTITY_INSERT chunking_strategies OFF;");
+                Console.WriteLine("[Seed] Created ChunkingStrategy (id=2)");
+            }
+            if (!await _db.ChunkingStrategies.AnyAsync(s => s.Id == 3))
+            {
+                await _db.Database.ExecuteSqlRawAsync(@"
+                    SET IDENTITY_INSERT chunking_strategies ON;
+                    INSERT INTO chunking_strategies (id, name, chunk_size, chunk_overlap, description, params)
+                    VALUES (3, 'Sentence-Window (3 sentences)', 0, 0, 'Sentence-window chunking strategy (3 sentences, step 2)', '{""window"": 3, ""step"": 2}');
+                    SET IDENTITY_INSERT chunking_strategies OFF;");
+                Console.WriteLine("[Seed] Created ChunkingStrategy (id=3)");
             }
 
             // 2. EmbeddingModel id=1
@@ -149,7 +167,7 @@ namespace BussinessLayer.Services
             if (!await _db.Users.AnyAsync(u => u.Id == 1))
             {
                 string hashed = PasswordHelper.HashPassword("admin123");
-                await _db.Database.ExecuteSqlRawAsync($@"
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
                     SET IDENTITY_INSERT users ON;
                     INSERT INTO users (id, full_name, email, role, password_hash, is_active, created_at)
                     VALUES (1, 'Demo User', 'demo@ragassistant.local', 'admin', '{hashed}', 1, GETDATE());
@@ -177,7 +195,7 @@ namespace BussinessLayer.Services
                 }
 
                 string hashed = PasswordHelper.HashPassword("bench123");
-                await _db.Database.ExecuteSqlRawAsync($@"
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
                     INSERT INTO users (full_name, email, role, password_hash, is_active, created_at)
                     VALUES ('Benchmark Manager', 'benchmark@ragassistant.local', 'benchmarkmanager', '{hashed}', 1, GETDATE());
                 ");

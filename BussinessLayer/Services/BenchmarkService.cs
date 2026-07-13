@@ -13,11 +13,22 @@ namespace BussinessLayer.Services
     {
         private readonly RagchatbotDbContext _db;
         private readonly IRAGEvaluationService _ragEval;
+        private readonly IChunkingService _chunker;
+        private readonly IEmbeddingService _embedder;
+        private readonly ITextExtractionService _extractor;
 
-        public BenchmarkService(RagchatbotDbContext db, IRAGEvaluationService ragEval)
+        public BenchmarkService(
+            RagchatbotDbContext db, 
+            IRAGEvaluationService ragEval,
+            IChunkingService chunker,
+            IEmbeddingService embedder,
+            ITextExtractionService extractor)
         {
             _db = db;
             _ragEval = ragEval;
+            _chunker = chunker;
+            _embedder = embedder;
+            _extractor = extractor;
         }
 
         public async Task<int> ImportTestQuestionsAsync(long subjectId, IEnumerable<TestQuestionImportDto> questions, bool overwrite = false)
@@ -81,13 +92,16 @@ namespace BussinessLayer.Services
             return true;
         }
 
-        public async Task<ExperimentRun> CreateExperimentRunAsync(string name, long subjectId)
+        public async Task<ExperimentRun> CreateExperimentRunAsync(string name, long subjectId, long chunkingStrategyId)
         {
+            // Auto-index/re-chunk the corpus for this subject and strategy before starting the run
+            await EnsureCorpusIndexedAsync(subjectId, chunkingStrategyId);
+
             var exp = new Experiment
             {
                 Name = name,
-                Type = "rag_vs_finetune", // Default type for this simple implementation
-                Status = "running", // Valid values: draft, running, done
+                Type = chunkingStrategyId == 1 ? "rag_vs_finetune" : "chunking_bench",
+                Status = "running",
                 CreatedAt = DateTime.UtcNow
             };
             _db.Experiments.Add(exp);
@@ -98,12 +112,86 @@ namespace BussinessLayer.Services
                 ExperimentId = exp.Id,
                 RunName = name,
                 Status = "running",
-                StartedAt = DateTime.UtcNow
+                StartedAt = DateTime.UtcNow,
+                ChunkingStrategyId = chunkingStrategyId,
+                EmbeddingModelId = 1 // Default model text-embedding-3-small
             };
             _db.ExperimentRuns.Add(run);
             await _db.SaveChangesAsync();
             
             return run;
+        }
+
+        private async Task EnsureCorpusIndexedAsync(long subjectId, long strategyId)
+        {
+            var docs = await _db.Documents
+                .Where(d => d.SubjectId == subjectId && d.Status == "indexed")
+                .ToListAsync();
+
+            foreach (var doc in docs)
+            {
+                // Check if this document has chunks for this strategy
+                var chunksCount = await _db.DocumentChunks
+                    .CountAsync(c => c.DocumentId == doc.Id && c.ChunkingStrategyId == strategyId);
+
+                if (chunksCount == 0)
+                {
+                    // Dynamically index the document
+                    if (!File.Exists(doc.FilePath)) continue;
+
+                    // Extract text
+                    var text = await _extractor.ExtractTextAsync(doc.FilePath);
+
+                    // Re-chunk document using selected strategy
+                    var chunks = _chunker.Chunk(text, strategyId).ToList();
+                    if (chunks.Count == 0) continue;
+
+                    // Clear old chunks if any exist for this strategy (should be 0 anyway)
+                    var oldChunks = await _db.DocumentChunks
+                        .Where(c => c.DocumentId == doc.Id && c.ChunkingStrategyId == strategyId)
+                        .ToListAsync();
+                    if (oldChunks.Any())
+                    {
+                        var oldChunkIds = oldChunks.Select(c => c.Id).ToList();
+                        var oldEmbeddings = await _db.ChunkEmbeddings
+                            .Where(e => oldChunkIds.Contains(e.ChunkId))
+                            .ToListAsync();
+                        _db.ChunkEmbeddings.RemoveRange(oldEmbeddings);
+                        _db.DocumentChunks.RemoveRange(oldChunks);
+                        await _db.SaveChangesAsync();
+                    }
+
+                    // Save new chunks and generate embeddings
+                    foreach (var dto in chunks)
+                    {
+                        var chunk = new DocumentChunk
+                        {
+                            DocumentId = doc.Id,
+                            ChunkIndex = dto.Index,
+                            Content = dto.Text,
+                            TokenCount = dto.TokenCount,
+                            PageNumber = 0,
+                            CreatedAt = DateTime.UtcNow,
+                            ChunkingStrategyId = strategyId
+                        };
+                        _db.DocumentChunks.Add(chunk);
+                        await _db.SaveChangesAsync();
+
+                        // Get vector embeddings
+                        var vector = await _embedder.EmbedAsync(dto.Text);
+                        var embedding = new ChunkEmbedding
+                        {
+                            ChunkId = chunk.Id,
+                            EmbeddingModelId = 1, // Default embedding model
+                            Vector = string.Join(',', vector.Select(v => v.ToString(System.Globalization.CultureInfo.InvariantCulture))),
+                            Dimension = vector.Length,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _db.ChunkEmbeddings.Add(embedding);
+                    }
+                    await _db.SaveChangesAsync();
+                }
+            }
         }
         
         public async Task<ExperimentRun> GetExperimentRunAsync(long experimentRunId)
@@ -132,9 +220,12 @@ namespace BussinessLayer.Services
             var tq = await _db.TestQuestions.FindAsync(testQuestionId);
             if (tq == null) throw new Exception("Question not found");
 
+            var run = await _db.ExperimentRuns.FindAsync(experimentRunId);
+            long? strategyId = run?.ChunkingStrategyId;
+
             try 
             {
-                var resultDto = await _ragEval.EvaluateAsync(tq.Question, tq.GroundTruth, tq.SubjectId);
+                var resultDto = await _ragEval.EvaluateAsync(tq.Question, tq.GroundTruth, tq.SubjectId, strategyId);
 
                 var evalResult = new EvaluationResult
                 {

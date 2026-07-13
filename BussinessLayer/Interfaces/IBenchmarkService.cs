@@ -11,7 +11,7 @@ namespace BussinessLayer.Interfaces
         Task<IEnumerable<TestQuestion>> GetTestQuestionsAsync(long subjectId);
         Task<bool> DeleteTestQuestionAsync(long questionId);
         
-        Task<ExperimentRun> CreateExperimentRunAsync(string name, long subjectId);
+        Task<ExperimentRun> CreateExperimentRunAsync(string name, long subjectId, long chunkingStrategyId);
         Task<ExperimentRun> GetExperimentRunAsync(long experimentRunId);
         Task<IEnumerable<ExperimentRun>> GetExperimentRunsAsync();
         

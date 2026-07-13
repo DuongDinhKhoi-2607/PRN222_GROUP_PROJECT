@@ -58,6 +58,15 @@
                         <label class="form-label">Tên Lượt Chạy (Run Name):</label>
                         <input type="text" name="RunName" class="form-control" required placeholder="VD: Test Gemini với chunk 1000..." />
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Chiến Lược Chunking (Chunking Strategy):</label>
+                        <select name="chunkingStrategyId" class="form-control" required>
+                            @foreach(var strat in Model.Strategies)
+                            {
+                                <option value="@strat.Id">@strat.Name (@strat.Description)</option>
+                            }
+                        </select>
+                    </div>
                     <div class="alert-info">
                         <strong>Lưu ý:</strong> Sẽ có @Model.QuestionIds.Count câu hỏi được đánh giá. Quá trình này mất khoảng @(Model.QuestionIds.Count * 5) giây.
                     </div>

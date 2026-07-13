@@ -5,6 +5,6 @@ namespace BussinessLayer.Interfaces
 {
     public interface IRAGEvaluationService
     {
-        Task<RAGEvaluationResultDto> EvaluateAsync(string question, string expectedAnswer, long? subjectId = null);
+        Task<RAGEvaluationResultDto> EvaluateAsync(string question, string expectedAnswer, long? subjectId = null, long? strategyId = null);
     }
 }

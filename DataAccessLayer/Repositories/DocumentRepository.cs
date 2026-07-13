@@ -18,7 +18,7 @@ namespace DataAccessLayer.Repositories
             return doc;
         }
 
-        public async Task<Document> GetByIdAsync(long id) => await _db.Documents.FindAsync(id);
+        public async Task<Document?> GetByIdAsync(long id) => await _db.Documents.FindAsync(id);
 
         public async Task<Document?> GetByIdWithSubjectAsync(long id)
             => await _db.Documents.Include(d => d.Subject).Include(d => d.UploadedByNavigation).FirstOrDefaultAsync(d => d.Id == id);

@@ -10,8 +10,8 @@ namespace BussinessLayer.Services
 {
     public class RetrievalResult
     {
-        public Document Document { get; set; }
-        public DocumentChunk Chunk { get; set; }
+        public Document Document { get; set; } = null!;
+        public DocumentChunk Chunk { get; set; } = null!;
         public float Score { get; set; }
     }
 
@@ -30,7 +30,8 @@ namespace BussinessLayer.Services
             string question,
             long? subjectId = null,
             int topK = 15,
-            float minScore = 0.1f)
+            float minScore = 0.1f,
+            long? strategyId = null)
         {
             // Lấy embeddings: lọc theo môn nếu có subjectId
             var all = subjectId.HasValue
@@ -38,6 +39,11 @@ namespace BussinessLayer.Services
                 : (await _embeddingRepo.GetAllWithChunkAsync()).ToList();
 
             if (!all.Any()) return Enumerable.Empty<RetrievalResult>();
+
+            if (strategyId.HasValue)
+            {
+                all = all.Where(e => e.Chunk.ChunkingStrategyId == strategyId.Value).ToList();
+            }
 
             // Nhóm các vector câu hỏi theo các chiều unique trong DB để tránh mismatch
             var uniqueDims = all.Select(e => e.Dimension).Distinct().ToList();
