@@ -34,13 +34,13 @@
 
     .chat-layout {
         display: flex;
-        height: calc(100vh - 60px); /* Đã căn chỉnh lại chiều cao để không lẹm */
-        margin: 0; /* Xóa margin âm gây lỗi */
+        height: calc(100vh - 60px); 
+        margin: 0; 
         background: var(--chat-bg);
         font-family: 'Inter', sans-serif;
-        border-radius: 16px; /* Bo tròn khung chat sang trọng */
+        border-radius: 16px; 
         border: 1px solid var(--chat-border);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Đổ bóng cửa sổ nổi */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); 
         overflow: hidden;
     }
 
@@ -53,6 +53,15 @@
         display: flex;
         flex-direction: column;
         z-index: 10;
+    }
+
+    /* Đã thêm: Đồng bộ chiều cao thanh header Sidebar (70px) và kéo viền ngang */
+    .sidebar-header {
+        height: 70px;
+        padding: 0 1rem;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid var(--chat-border);
     }
 
     .btn-new-chat {
@@ -116,8 +125,10 @@
         position: relative;
     }
 
+    /* Đã sửa: Khóa chiều cao 70px y hệt Sidebar để 2 bên thẳng hàng tắp lự */
     .chat-header {
-        padding: 1rem 1.5rem;
+        height: 70px;
+        padding: 0 1.5rem;
         border-bottom: 1px solid var(--chat-border);
         background: rgba(11, 13, 20, 0.8);
         backdrop-filter: blur(10px);
@@ -348,12 +359,14 @@
 
 <div class="chat-layout">
     <div class="chat-sidebar">
-        <div style="padding: 1.5rem 1rem 1rem;">
+        <!-- Đã bọc nút tạo mới vào class sidebar-header -->
+        <div class="sidebar-header">
             <a asp-page="Index" class="btn-new-chat">
                 <i class="fa-solid fa-plus"></i> Tạo phiên mới
             </a>
         </div>
-        <div style="padding: 0 1rem 1rem; flex: 1; overflow-y: auto;">
+        
+        <div style="padding: 1.25rem 1rem 1rem; flex: 1; overflow-y: auto;">
             <div style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 0.5rem;">
                 Gần đây
             </div>
@@ -429,7 +442,7 @@
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 if (this.value.trim() !== '') {
-                    btnSend.click(); // Đổi thành click button để chạy event listener chuẩn xác
+                    btnSend.click(); 
                 }
             }
         });
@@ -445,7 +458,6 @@
 
             const userMsg = qInput.value;
 
-            // Xóa chữ trong ô input dùng setTimeout để đảm bảo form vẫn lấy được data gửi đi
             setTimeout(() => {
                 qInput.value = '';
                 qInput.style.height = 'auto';
