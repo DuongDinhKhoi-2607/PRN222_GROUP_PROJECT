@@ -134,6 +134,19 @@
                     </select>
                 </div>
 
+                <div class="field-group">
+                    <label class="field-label" for="strategyId">Chiến lược Chunking</label>
+                    <select id="strategyId" name="strategyId" class="field-input">
+                        <option value="1">Theo đoạn (Mặc định)</option>
+                        <option value="2">Theo số ký tự</option>
+                    </select>
+                </div>
+
+                <div class="field-group" id="maxCharsGroup" style="display: none;">
+                    <label class="field-label" for="maxChars">Số lượng ký tự tối đa mỗi Chunk</label>
+                    <input type="number" id="maxChars" name="maxChars" class="field-input" value="1000" min="100" />
+                </div>
+
                 <div class="progress-container" id="progressContainer" style="display: none; margin-bottom: 1.5rem;">
                     <div style="display: flex; justify-content: space-between; font-size: .8rem; margin-bottom: .4rem;">
                         <span style="color: var(--text-primary); font-weight: 500;">Đang upload...</span>
@@ -214,6 +227,17 @@ function setFile(f) {
     if(!tInput.value) tInput.value = f.name.replace(/\.[^.]+$/, '');
 }
 const uploadForm = document.getElementById('uploadForm');
+const strategyIdSelect = document.getElementById('strategyId');
+const maxCharsGroup = document.getElementById('maxCharsGroup');
+if(strategyIdSelect && maxCharsGroup) {
+    strategyIdSelect.addEventListener('change', function() {
+        if(this.value === '2') {
+            maxCharsGroup.style.display = 'block';
+        } else {
+            maxCharsGroup.style.display = 'none';
+        }
+    });
+}
 uploadForm.addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);

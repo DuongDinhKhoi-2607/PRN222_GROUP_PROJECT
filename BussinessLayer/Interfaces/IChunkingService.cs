@@ -11,6 +11,6 @@ namespace BussinessLayer.Interfaces
 
     public interface IChunkingService
     {
-        IEnumerable<ChunkDto> Chunk(string text, long strategyId);
+        IEnumerable<ChunkDto> Chunk(string text, long strategyId, int? maxChars = null);
     }
 }

@@ -47,6 +47,10 @@ namespace PresentationLayer.Pages.Payment
                         // Push real-time update to admin dashboard
                         await _dashboardHub.Clients.Group("AdminDashboard")
                             .SendAsync("DashboardUpdated", "ProUpgrade", new { userId });
+                        
+                        var summary = await _dashboardService.GetSummaryAsync();
+                        await _dashboardHub.Clients.Group("AdminDashboard")
+                            .SendAsync("SummaryUpdated", summary);
 
                         TempData["SuccessMessage"] = "Chúc mừng! Bạn đã nâng cấp thành công lên gói Pro. Giờ đây bạn có thể Chat thoải mái không giới hạn!";
                         return RedirectToPage("/Upgrade/Index");

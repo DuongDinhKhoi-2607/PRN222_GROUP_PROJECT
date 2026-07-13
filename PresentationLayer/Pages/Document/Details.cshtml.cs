@@ -16,11 +16,13 @@ namespace PresentationLayer.Pages.Document
     {
         private readonly IDocumentService _docService;
         private readonly IPermissionService _permissionService;
+        private readonly IDocumentIngestionService _ingestService;
 
-        public DetailsModel(IDocumentService docService, IPermissionService permissionService)
+        public DetailsModel(IDocumentService docService, IPermissionService permissionService, IDocumentIngestionService ingestService)
         {
             _docService = docService;
             _permissionService = permissionService;
+            _ingestService = ingestService;
         }
 
         public DocumentDto Document { get; set; } = null!;
@@ -53,6 +55,32 @@ namespace PresentationLayer.Pages.Document
             ChunksCount = Chunks.Count;
 
             return Page();
+        }
+        public async Task<IActionResult> OnGetPreviewChunks(long id, long strategyId, int? maxChars)
+        {
+            try
+            {
+                var chunks = await _ingestService.PreviewChunksAsync(id, strategyId, maxChars);
+                return new JsonResult(new { success = true, chunks = chunks.Select(c => new { content = c.Text }) });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
+        public async Task<IActionResult> OnPostRechunk(long id, long strategyId, int? maxChars)
+        {
+            try
+            {
+                // Cho phép tất cả giảng viên Re-chunk, không cần check môn học
+                await _ingestService.RechunkAsync(id, strategyId, maxChars);
+                return new JsonResult(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
         }
     }
 }

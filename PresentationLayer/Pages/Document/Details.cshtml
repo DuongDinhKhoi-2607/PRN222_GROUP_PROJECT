@@ -2,6 +2,7 @@
 @model PresentationLayer.Pages.Document.DetailsModel
 @{
     ViewData["Title"] = "Chi tiết Tài liệu";
+    var canEdit = Model.IsAdmin || Model.AllowedSubjectIds.Contains(Model.Document.SubjectId);
 }
 
 <style>
@@ -110,12 +111,38 @@
             @if (Model.Chunks != null && Model.ChunksCount > 0)
             {
                 <div class="content-card">
-                    <div class="info-card-header">
-                        <div class="info-card-icon" style="background:linear-gradient(135deg,var(--accent-2),#00b090);box-shadow:0 0 12px var(--accent-2-glow)"><i class="fa-solid fa-file-lines"></i></div>
-                        <span class="info-card-title">Nội dung đã trích xuất</span>
-                        <span style="margin-left:auto;font-size:.72rem;color:var(--text-muted)">@Model.ChunksCount đoạn</span>
+                    <div class="info-card-header" style="justify-content: space-between;">
+                        <div style="display:flex; align-items:center; gap:.75rem;">
+                            <div class="info-card-icon" style="background:linear-gradient(135deg,var(--accent-2),#00b090);box-shadow:0 0 12px var(--accent-2-glow)"><i class="fa-solid fa-file-lines"></i></div>
+                            <span class="info-card-title">Nội dung đã trích xuất</span>
+                        </div>
+                        <span id="chunkCountLabel" style="font-size:.72rem;color:var(--text-muted)">@Model.ChunksCount đoạn</span>
                     </div>
-                    <div class="content-body" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; background: var(--bg-surface);">
+                    
+                    <div style="padding: 1rem 1.5rem; background: var(--bg-elevated); border-bottom: 1px solid var(--border); display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                        @Html.AntiForgeryToken()
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="display:block; font-size:.75rem; font-weight:600; color:var(--text-muted); margin-bottom:.4rem;">Chiến lược Chunking</label>
+                            <select id="previewStrategyId" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); padding: .5rem; font-size: .85rem;">
+                                <option value="1">Theo đoạn</option>
+                                <option value="2">Theo số ký tự</option>
+                            </select>
+                        </div>
+                        <div id="previewMaxCharsGroup" style="display: none; flex: 1; min-width: 150px;">
+                            <label style="display:block; font-size:.75rem; font-weight:600; color:var(--text-muted); margin-bottom:.4rem;">Ký tự tối đa/Chunk</label>
+                            <input type="number" id="previewMaxChars" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); padding: .5rem; font-size: .85rem;" value="1000" min="100" />
+                        </div>
+                        <div style="display: flex; gap: .5rem;">
+                            <button type="button" id="btnPreview" style="padding: .5rem 1rem; background: var(--bg-surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; font-size: .85rem; font-weight: 500;">
+                                <i class="fa-solid fa-eye"></i> Xem thử
+                            </button>
+                            <button type="button" id="btnRechunk" style="padding: .5rem 1rem; background: linear-gradient(135deg, var(--accent-2), #00b090); border: none; border-radius: var(--radius-sm); color: #fff; cursor: pointer; font-size: .85rem; font-weight: 600; display: none;">
+                                <i class="fa-solid fa-arrows-rotate"></i> Lưu & Re-chunk
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="content-body" id="chunksContainer" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; background: var(--bg-surface);">
                         @{ int chunkCounter = 1; }
                         @foreach (var chunk in Model.Chunks)
                         {
@@ -159,9 +186,6 @@
             </div>
 
             <div class="action-card">
-                @{
-                    var canEdit = Model.IsAdmin || Model.AllowedSubjectIds.Contains(Model.Document.SubjectId);
-                }
                 @if (canEdit)
                 {
                     <a asp-page="Edit" asp-route-id="@Model.Document.Id" asp-route-returnUrl="@Model.ReturnUrl" class="btn-edit">
@@ -178,3 +202,96 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        const previewStrategyId = document.getElementById('previewStrategyId');
+        const previewMaxCharsGroup = document.getElementById('previewMaxCharsGroup');
+        const btnPreview = document.getElementById('btnPreview');
+        const btnRechunk = document.getElementById('btnRechunk');
+        const chunksContainer = document.getElementById('chunksContainer');
+        const chunkCountLabel = document.getElementById('chunkCountLabel');
+        const docId = @Model.Document.Id;
+
+        if (previewStrategyId) {
+            previewStrategyId.addEventListener('change', function() {
+                if (this.value === '2') {
+                    previewMaxCharsGroup.style.display = 'block';
+                } else {
+                    previewMaxCharsGroup.style.display = 'none';
+                }
+            });
+
+            btnPreview.addEventListener('click', function() {
+                const sId = previewStrategyId.value;
+                const maxChars = document.getElementById('previewMaxChars').value;
+                
+                chunksContainer.innerHTML = '<div style="color:var(--text-muted); font-size:.85rem;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải preview...</div>';
+                
+                fetch(`?handler=PreviewChunks&id=${docId}&strategyId=${sId}&maxChars=${maxChars}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        chunksContainer.innerHTML = '';
+                        chunkCountLabel.innerText = `${data.chunks.length} đoạn (Preview)`;
+                        data.chunks.forEach((c, idx) => {
+                            chunksContainer.innerHTML += `
+                                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1.25rem;">
+                                    <div style="font-size: .75rem; font-weight: 600; color: var(--accent); margin-bottom: .75rem; display: flex; align-items: center; gap: .5rem;">
+                                        <i class="fa-solid fa-puzzle-piece"></i> Đoạn #${idx + 1}
+                                    </div>
+                                    <pre class="content-text" style="margin: 0;">${c.content.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+                                </div>
+                            `;
+                        });
+                        btnRechunk.style.display = 'inline-flex';
+                    } else {
+                        chunksContainer.innerHTML = `<div style="color:red; font-size:.85rem;">Lỗi: ${data.message}</div>`;
+                    }
+                })
+                .catch(err => {
+                    chunksContainer.innerHTML = `<div style="color:red; font-size:.85rem;">Lỗi kết nối.</div>`;
+                });
+            });
+
+            btnRechunk.addEventListener('click', function() {
+                if(!confirm('Bạn có chắc chắn muốn Re-chunk tài liệu này? Các chunk cũ và embedding liên quan sẽ bị thay thế.')) return;
+                
+                const sId = previewStrategyId.value;
+                const maxChars = document.getElementById('previewMaxChars').value;
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                
+                const btn = this;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+                btn.disabled = true;
+                
+                fetch(`?handler=Rechunk&id=${docId}&strategyId=${sId}&maxChars=${maxChars}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('Re-chunk thành công!');
+                        location.reload();
+                    } else {
+                        alert('Lỗi: ' + data.message);
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    alert('Lỗi kết nối.');
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                });
+            });
+        }
+    </script>
+}

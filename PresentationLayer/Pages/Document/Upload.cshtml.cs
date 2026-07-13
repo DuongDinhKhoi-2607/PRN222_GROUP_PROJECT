@@ -95,7 +95,9 @@ namespace PresentationLayer.Pages.Document
             long? chapterId, 
             string? returnUrl,
             string? duplicateAction = null,
-            long? duplicateId = null)
+            long? duplicateId = null,
+            long strategyId = 1,
+            int? maxChars = null)
         {
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -204,7 +206,7 @@ namespace PresentationLayer.Pages.Document
 
             try
             {
-                var doc = await _ingest.IngestAsync(file, title, subjectId, chapterId, userId);
+                var doc = await _ingest.IngestAsync(file, title, subjectId, chapterId, userId, strategyId, maxChars);
 
                 // Fetch details with subject/user name populated for the client UI
                 var docDto = await _docService.GetByIdWithSubjectAsync(doc.Id);

@@ -8,16 +8,24 @@ namespace BussinessLayer.Services
 {
     public class ChunkingService : IChunkingService
     {
-        public IEnumerable<ChunkDto> Chunk(string text, long strategyId)
+        public IEnumerable<ChunkDto> Chunk(string text, long strategyId, int? maxChars = null)
         {
             if (string.IsNullOrEmpty(text)) yield break;
 
             if (strategyId == 2)
             {
-                // Strategy 2: Recursive Character Splitter (approx 500 chars limit)
-                foreach (var chunk in RecursiveSplit(text, 500))
+                // Strategy 2: Fixed-size (by character)
+                int idx = 0;
+                int maxSize = maxChars ?? 1000;
+                for (int i = 0; i < text.Length; i += maxSize)
                 {
-                    yield return chunk;
+                    var chunkText = text.Substring(i, Math.Min(maxSize, text.Length - i));
+                    yield return new ChunkDto
+                    {
+                        Index = idx++,
+                        Text = chunkText,
+                        TokenCount = chunkText.Length // using character count as token approximation
+                    };
                 }
             }
             else if (strategyId == 3)
@@ -30,17 +38,18 @@ namespace BussinessLayer.Services
             }
             else
             {
-                // Strategy 1 (Default): Fixed-size (1000 chars limit)
+                // Strategy 1 (Default): Paragraph-based
+                var paragraphs = text.Split(new[] { "\r\n\r\n", "\n\n" }, StringSplitOptions.RemoveEmptyEntries);
                 int idx = 0;
-                int maxSize = 1000;
-                for (int i = 0; i < text.Length; i += maxSize)
+                foreach (var p in paragraphs)
                 {
-                    var chunkText = text.Substring(i, Math.Min(maxSize, text.Length - i));
+                    var trimmed = p.Trim();
+                    if (string.IsNullOrEmpty(trimmed)) continue;
                     yield return new ChunkDto
                     {
                         Index = idx++,
-                        Text = chunkText,
-                        TokenCount = chunkText.Length // using character count as token approximation
+                        Text = trimmed,
+                        TokenCount = trimmed.Length
                     };
                 }
             }

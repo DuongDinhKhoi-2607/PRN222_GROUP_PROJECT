@@ -40,40 +40,62 @@ namespace BussinessLayer.Services
         {
             var targetYear = year ?? DateTime.Now.Year;
             DateTime from, to;
+            List<string> allLabels = new List<string>();
 
             switch (groupBy.ToLower())
             {
                 case "week":
                     from = new DateTime(targetYear, 1, 1);
                     to = new DateTime(targetYear, 12, 31, 23, 59, 59);
+                    for (int i = 1; i <= 52; i++) allLabels.Add($"T{i:D2}");
                     break;
                 case "year":
                     from = new DateTime(targetYear - 4, 1, 1); // Last 5 years
                     to = new DateTime(targetYear, 12, 31, 23, 59, 59);
+                    for (int i = targetYear - 4; i <= targetYear; i++) allLabels.Add(i.ToString());
                     break;
                 default: // month
                     from = new DateTime(targetYear, 1, 1);
                     to = new DateTime(targetYear, 12, 31, 23, 59, 59);
+                    for (int i = 1; i <= 12; i++) allLabels.Add($"{i:D2}/{targetYear}");
                     break;
             }
 
             var proUpgrades = await _dashboardRepo.GetProUpgradesByPeriodAsync(from, to, groupBy);
             var tokenUsage = await _dashboardRepo.GetTokenUsageByPeriodAsync(from, to, groupBy);
 
+            var proDict = proUpgrades.ToDictionary(p => FormatPeriodLabel(p.Period, groupBy), p => p);
+            var tokenDict = tokenUsage.ToDictionary(t => FormatPeriodLabel(t.Period, groupBy), t => t);
+
+            var finalPro = new List<TimeSeriesDataPointDto>();
+            var finalToken = new List<TimeSeriesDataPointDto>();
+
+            foreach (var label in allLabels)
+            {
+                if (proDict.TryGetValue(label, out var p))
+                {
+                    finalPro.Add(new TimeSeriesDataPointDto { Label = label, Value = p.Count, Revenue = p.Revenue });
+                }
+                else
+                {
+                    finalPro.Add(new TimeSeriesDataPointDto { Label = label, Value = 0, Revenue = 0 });
+                }
+
+                if (tokenDict.TryGetValue(label, out var t))
+                {
+                    finalToken.Add(new TimeSeriesDataPointDto { Label = label, Value = t.TotalTokens });
+                }
+                else
+                {
+                    finalToken.Add(new TimeSeriesDataPointDto { Label = label, Value = 0 });
+                }
+            }
+
             return new DashboardChartDataDto
             {
                 GroupBy = groupBy,
-                ProUpgrades = proUpgrades.Select(p => new TimeSeriesDataPointDto
-                {
-                    Label = FormatPeriodLabel(p.Period, groupBy),
-                    Value = p.Count,
-                    Revenue = p.Revenue
-                }).ToList(),
-                TokenUsage = tokenUsage.Select(t => new TimeSeriesDataPointDto
-                {
-                    Label = FormatPeriodLabel(t.Period, groupBy),
-                    Value = t.TotalTokens
-                }).ToList()
+                ProUpgrades = finalPro,
+                TokenUsage = finalToken
             };
         }
 

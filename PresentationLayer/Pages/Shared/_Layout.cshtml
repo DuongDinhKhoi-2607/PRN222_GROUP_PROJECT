@@ -112,6 +112,7 @@
                             <div class="nav-indicator"></div>
                         </a>
                     }
+                    @* Benchmark feature is temporarily hidden due to 3-tier architecture violations
                     @if (roleClaim == "benchmarkmanager" || roleClaim == "admin")
                     {
                         <div class="nav-section-label" style="margin-top:.75rem">Đánh giá AI</div>
@@ -121,6 +122,7 @@
                             <div class="nav-indicator"></div>
                         </a>
                     }
+                    *@
 
                     @if (User.Identity?.IsAuthenticated == true)
                     {

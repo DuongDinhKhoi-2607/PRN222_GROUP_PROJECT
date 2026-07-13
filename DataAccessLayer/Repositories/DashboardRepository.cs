@@ -36,12 +36,15 @@ namespace DataAccessLayer.Repositories
         public async Task<List<(DateTime Period, int Count, decimal Revenue)>> GetProUpgradesByPeriodAsync(
             DateTime from, DateTime to, string groupBy)
         {
-            var query = _db.ProUpgrades
-                .Where(p => p.UpgradedAt >= from && p.UpgradedAt <= to);
+            var data = await _db.ProUpgrades
+                .Where(p => p.UpgradedAt >= from && p.UpgradedAt <= to)
+                .Select(p => new { p.UpgradedAt, p.Amount })
+                .ToListAsync();
 
+            var cal = System.Globalization.CultureInfo.CurrentCulture.Calendar;
             var grouped = groupBy.ToLower() switch
             {
-                "week" => query.GroupBy(p => new { p.UpgradedAt.Year, Week = EF.Functions.DateDiffWeek(new DateTime(p.UpgradedAt.Year, 1, 1), p.UpgradedAt) })
+                "week" => data.GroupBy(p => new { p.UpgradedAt.Year, Week = cal.GetWeekOfYear(p.UpgradedAt, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday) })
                     .Select(g => new
                     {
                         Year = g.Key.Year,
@@ -49,7 +52,7 @@ namespace DataAccessLayer.Repositories
                         Count = g.Count(),
                         Revenue = g.Sum(x => x.Amount)
                     }),
-                "year" => query.GroupBy(p => new { p.UpgradedAt.Year, Period = 0 })
+                "year" => data.GroupBy(p => new { p.UpgradedAt.Year, Period = 0 })
                     .Select(g => new
                     {
                         Year = g.Key.Year,
@@ -57,7 +60,7 @@ namespace DataAccessLayer.Repositories
                         Count = g.Count(),
                         Revenue = g.Sum(x => x.Amount)
                     }),
-                _ => query.GroupBy(p => new { p.UpgradedAt.Year, Period = p.UpgradedAt.Month })
+                _ => data.GroupBy(p => new { p.UpgradedAt.Year, Period = p.UpgradedAt.Month })
                     .Select(g => new
                     {
                         Year = g.Key.Year,
@@ -67,7 +70,7 @@ namespace DataAccessLayer.Repositories
                     })
             };
 
-            var results = await grouped.OrderBy(g => g.Year).ThenBy(g => g.Period).ToListAsync();
+            var results = grouped.OrderBy(g => g.Year).ThenBy(g => g.Period).ToList();
 
             return results.Select(r => groupBy.ToLower() switch
             {
@@ -83,26 +86,29 @@ namespace DataAccessLayer.Repositories
         public async Task<List<(DateTime Period, int TotalTokens)>> GetTokenUsageByPeriodAsync(
             DateTime from, DateTime to, string groupBy)
         {
-            var query = _db.TokenUsageLogs
-                .Where(t => t.UsedAt >= from && t.UsedAt <= to);
+            var data = await _db.TokenUsageLogs
+                .Where(t => t.UsedAt >= from && t.UsedAt <= to)
+                .Select(t => new { t.UsedAt, t.TokensUsed })
+                .ToListAsync();
 
+            var cal = System.Globalization.CultureInfo.CurrentCulture.Calendar;
             var grouped = groupBy.ToLower() switch
             {
-                "week" => query.GroupBy(t => new { t.UsedAt.Year, Week = EF.Functions.DateDiffWeek(new DateTime(t.UsedAt.Year, 1, 1), t.UsedAt) })
+                "week" => data.GroupBy(t => new { t.UsedAt.Year, Week = cal.GetWeekOfYear(t.UsedAt, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday) })
                     .Select(g => new
                     {
                         Year = g.Key.Year,
                         Period = g.Key.Week,
                         TotalTokens = g.Sum(x => x.TokensUsed)
                     }),
-                "year" => query.GroupBy(t => new { t.UsedAt.Year, Period = 0 })
+                "year" => data.GroupBy(t => new { t.UsedAt.Year, Period = 0 })
                     .Select(g => new
                     {
                         Year = g.Key.Year,
                         Period = g.Key.Period,
                         TotalTokens = g.Sum(x => x.TokensUsed)
                     }),
-                _ => query.GroupBy(t => new { t.UsedAt.Year, Period = t.UsedAt.Month })
+                _ => data.GroupBy(t => new { t.UsedAt.Year, Period = t.UsedAt.Month })
                     .Select(g => new
                     {
                         Year = g.Key.Year,
@@ -111,7 +117,7 @@ namespace DataAccessLayer.Repositories
                     })
             };
 
-            var results = await grouped.OrderBy(g => g.Year).ThenBy(g => g.Period).ToListAsync();
+            var results = grouped.OrderBy(g => g.Year).ThenBy(g => g.Period).ToList();
 
             return results.Select(r => groupBy.ToLower() switch
             {

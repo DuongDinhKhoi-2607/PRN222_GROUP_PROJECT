@@ -33,7 +33,7 @@ namespace BussinessLayer.Services
             _embedder = embedder;
         }
 
-        public async Task<Document> IngestAsync(IFormFile file, string title, long subjectId, long? chapterId = null, long? userId = null)
+        public async Task<Document> IngestAsync(IFormFile file, string title, long subjectId, long? chapterId = null, long? userId = null, long strategyId = 1, int? maxChars = null)
         {
             if (file == null) throw new ArgumentNullException(nameof(file));
 
@@ -75,7 +75,7 @@ namespace BussinessLayer.Services
             await _docRepo.AddAsync(doc);
 
             // Chunk and embed
-            var chunks = _chunker.Chunk(text, 1);
+            var chunks = _chunker.Chunk(text, strategyId, maxChars);
             foreach (var dto in chunks)
             {
                 var chunk = new DocumentChunk
@@ -86,7 +86,7 @@ namespace BussinessLayer.Services
                     TokenCount = dto.TokenCount,
                     PageNumber = 0,
                     CreatedAt = DateTime.UtcNow,
-                    ChunkingStrategyId = 1
+                    ChunkingStrategyId = strategyId
                 };
                 await _chunkRepo.AddAsync(chunk);
 
@@ -107,6 +107,53 @@ namespace BussinessLayer.Services
             await _docRepo.UpdateAsync(doc);
 
             return doc;
+        }
+
+        public async Task<IEnumerable<ChunkDto>> PreviewChunksAsync(long documentId, long strategyId, int? maxChars = null)
+        {
+            var doc = await _docRepo.GetByIdAsync(documentId);
+            if (doc == null) throw new ArgumentException("Document not found");
+            var text = await _extractor.ExtractTextAsync(doc.FilePath);
+            return _chunker.Chunk(text, strategyId, maxChars);
+        }
+
+        public async Task RechunkAsync(long documentId, long strategyId, int? maxChars = null)
+        {
+            var doc = await _docRepo.GetByIdAsync(documentId);
+            if (doc == null) throw new ArgumentException("Document not found");
+            
+            var text = await _extractor.ExtractTextAsync(doc.FilePath);
+            
+            // Delete old chunks (cascade delete handles embeddings in DB or we rely on DB setup, but since we are re-inserting, we might need to delete embeddings first if cascade is not on. Usually DocumentChunk delete cascades to ChunkEmbedding).
+            await _chunkRepo.DeleteByDocumentIdAsync(documentId);
+            
+            // Re-chunk and embed
+            var chunks = _chunker.Chunk(text, strategyId, maxChars);
+            foreach (var dto in chunks)
+            {
+                var chunk = new DocumentChunk
+                {
+                    DocumentId = doc.Id,
+                    ChunkIndex = dto.Index,
+                    Content = dto.Text,
+                    TokenCount = dto.TokenCount,
+                    PageNumber = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    ChunkingStrategyId = strategyId
+                };
+                await _chunkRepo.AddAsync(chunk);
+
+                var vector = await _embedder.EmbedAsync(dto.Text);
+                var embedding = new ChunkEmbedding
+                {
+                    ChunkId = chunk.Id,
+                    EmbeddingModelId = 1,
+                    Vector = string.Join(',', vector.Select(v => v.ToString(System.Globalization.CultureInfo.InvariantCulture))),
+                    Dimension = vector.Length,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _embeddingRepo.AddAsync(embedding);
+            }
         }
     }
 }

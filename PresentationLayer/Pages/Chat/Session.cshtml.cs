@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using BussinessLayer.Interfaces;
 using BussinessLayer.DTOs;
 
@@ -20,6 +21,8 @@ namespace PresentationLayer.Pages.Chat
         private readonly IMessageCitationService _citationSvc;
         private readonly ISubjectService _subjectService;
         private readonly IUserService _userService;
+        private readonly Microsoft.AspNetCore.SignalR.IHubContext<PresentationLayer.Hubs.DashboardHub> _dashboardHub;
+        private readonly IDashboardService _dashboardService;
 
         public SessionModel(
             IChatService chat,
@@ -27,7 +30,9 @@ namespace PresentationLayer.Pages.Chat
             ILLMService llm,
             IMessageCitationService citationSvc,
             ISubjectService subjectService,
-            IUserService userService)
+            IUserService userService,
+            Microsoft.AspNetCore.SignalR.IHubContext<PresentationLayer.Hubs.DashboardHub> dashboardHub,
+            IDashboardService dashboardService)
         {
             _chat = chat;
             _retrieval = retrieval;
@@ -35,6 +40,8 @@ namespace PresentationLayer.Pages.Chat
             _citationSvc = citationSvc;
             _subjectService = subjectService;
             _userService = userService;
+            _dashboardHub = dashboardHub;
+            _dashboardService = dashboardService;
         }
 
         public ChatSessionDto CurrentSession { get; set; } = null!;
@@ -98,6 +105,11 @@ namespace PresentationLayer.Pages.Chat
                 await _chat.AddMessageAsync(sessionId, "assistant", upgradeMsg);
                 return RedirectToPage("Session", new { id = sessionId });
             }
+
+            // Real-time broadcast for token usage
+            await _dashboardHub.Clients.Group("AdminDashboard").SendAsync("DashboardUpdated", "TokenUsage", new { userId });
+            var summary = await _dashboardService.GetSummaryAsync();
+            await _dashboardHub.Clients.Group("AdminDashboard").SendAsync("SummaryUpdated", summary);
 
             var contexts = await _retrieval.RetrieveAsync(question, null);
             var (answer, citations) = await _llm.GenerateAnswerAsync(question, contexts, null);
