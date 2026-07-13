@@ -1,0 +1,197 @@
+@page
+@model PresentationLayer.Pages.Payment.PaymentFailedModel
+@{
+    ViewData["Title"] = "Thanh toán thất bại";
+}
+
+<style>
+    .payment-result-page {
+        padding: 4rem 1rem;
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 100px);
+    }
+
+    .result-card-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 480px;
+    }
+
+    .fail-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 120%;
+        height: 120%;
+        /* Tăng opacity từ 0.12 lên 0.25 để sáng hơn */
+        background: radial-gradient(circle, rgba(214, 48, 49, 0.25) 0%, rgba(0,0,0,0) 65%);
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .result-card {
+        /* Pha chút ánh đỏ vào nền xám để bớt tối */
+        background: rgba(40, 30, 32, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(214, 48, 49, 0.25);
+        border-radius: 24px;
+        padding: 3.5rem 2.5rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(214, 48, 49, 0.15);
+        position: relative;
+        text-align: center;
+    }
+    
+    .result-card::before {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        border-radius: 24px;
+        padding-top: 4px;
+        background: linear-gradient(90deg, #ff7675, #d63031);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .icon-wrapper {
+        width: 90px;
+        height: 90px;
+        margin: 0 auto 1.75rem;
+        background: rgba(214, 48, 49, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 25px rgba(214, 48, 49, 0.2) inset;
+        border: 1px solid rgba(214, 48, 49, 0.3);
+    }
+
+    .icon-wrapper i {
+        font-size: 3rem;
+        color: #ff7675;
+        text-shadow: 0 0 15px rgba(214, 48, 49, 0.6);
+    }
+
+    .result-title {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(to right, #ffffff, #ff7675);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.5px;
+    }
+
+    .result-subtitle {
+        color: #b0b0c0;
+        font-size: 1rem;
+        margin-bottom: 2.5rem;
+        line-height: 1.5;
+    }
+
+    .info-box {
+        /* Chuyển từ đen mờ sang trắng mờ để hộp nổi lên */
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2.5rem;
+        text-align: left;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        color: #e0e0e0;
+        font-size: 0.95rem;
+    }
+
+    .info-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .info-label {
+        color: #9aa0b6;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #ffffff;
+        font-family: monospace;
+        font-size: 1.05rem;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-return {
+        /* Nút bấm viền đỏ bắt mắt hơn */
+        background: rgba(214, 48, 49, 0.08);
+        color: #ff7675;
+        border: 1px solid rgba(214, 48, 49, 0.3);
+        border-radius: 12px;
+        padding: 14px 20px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-return:hover {
+        background: rgba(214, 48, 49, 0.2);
+        transform: translateY(-2px);
+        color: #ffffff;
+        border-color: rgba(214, 48, 49, 0.5);
+        box-shadow: 0 5px 15px rgba(214, 48, 49, 0.2);
+    }
+    
+    @@media (max-width: 576px) {
+        .result-card {
+            padding: 2.5rem 1.5rem;
+        }
+    }
+</style>
+
+<div class="payment-result-page">
+    <div class="result-card-wrapper">
+        <div class="fail-glow"></div>
+        
+        <div class="result-card">
+            <div class="icon-wrapper">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+            
+            <h2 class="result-title">Thanh Toán Thất Bại</h2>
+            <p class="result-subtitle">Giao dịch của bạn đã bị hủy hoặc gặp sự cố. Vui lòng thử lại sau.</p>
+            
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">Mã đơn hàng</span>
+                    <span class="info-value">@Model.OrderId</span>
+                </div>
+                <hr style="border-color: rgba(255,255,255,0.06); margin: 1rem 0;">
+                <div class="info-row">
+                    <span class="info-label">Mã lỗi VNPay</span>
+                    <span class="info-value" style="color: #ff7675;">@Model.ErrorCode</span>
+                </div>
+            </div>
+
+            <a href="/Upgrade" class="btn-return">
+                <i class="fa-solid fa-arrow-left"></i> Quay lại trang nâng cấp
+            </a>
+        </div>
+    </div>
+</div>
