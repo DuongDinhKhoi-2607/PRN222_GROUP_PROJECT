@@ -26,6 +26,7 @@ namespace BussinessLayer.Services
             _apiKey = config["Gemini:ApiKey"]
                 ?? throw new InvalidOperationException("Thiếu Gemini:ApiKey trong appsettings.json");
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+            _httpClient.DefaultRequestVersion = new Version(1, 1); // Fix cho lỗi "Response ended prematurely" của HTTP/2
         }
 
         private async Task ThrottleAsync()

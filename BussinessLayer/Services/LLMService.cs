@@ -17,8 +17,8 @@ namespace BussinessLayer.Services
         private readonly string _apiKey;
         private readonly HttpClient _httpClient;
 
-        // gemini-2.5-flash: model thế hệ mới nhất của Google Gemini
-        private const string ModelName = "gemini-2.5-flash";
+        // gemini-flash-latest: model tiêu chuẩn luôn cập nhật mới nhất của Google Gemini
+        private const string ModelName = "gemini-flash-latest";
         private const int MaxHistoryTurns = 10;
         private const int MaxRetries = 3;
 

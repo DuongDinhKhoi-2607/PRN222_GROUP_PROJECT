@@ -58,5 +58,6 @@ app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
 app.MapHub<DocumentHub>("/documentHub");
+app.MapHub<PresentationLayer.Hubs.DashboardHub>("/dashboardHub");
 
 app.Run();

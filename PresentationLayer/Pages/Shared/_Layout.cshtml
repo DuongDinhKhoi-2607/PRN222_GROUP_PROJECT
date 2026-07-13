@@ -101,9 +101,14 @@
                     @if (roleClaim == "admin")
                     {
                         <div class="nav-section-label" style="margin-top:.75rem">Admin</div>
-                        <a href="/Admin" class="nav-item @(path.Contains("/Admin", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <a href="/Admin" class="nav-item @(path.Equals("/Admin", StringComparison.OrdinalIgnoreCase) || path.Equals("/Admin/Index", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                             <i class="fa-solid fa-user-shield"></i>
                             <span>Quản lý Quyền</span>
+                            <div class="nav-indicator"></div>
+                        </a>
+                        <a href="/Admin/Dashboard" class="nav-item @(path.Contains("/Admin/Dashboard", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            <span>Dashboard Thống Kê</span>
                             <div class="nav-indicator"></div>
                         </a>
                     }

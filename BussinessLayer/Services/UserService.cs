@@ -12,10 +12,12 @@ namespace BussinessLayer.Services
     public class UserService : IUserService
     {
         private readonly UserRepository _userRepo;
+        private readonly DashboardRepository _dashboardRepo;
 
-        public UserService(UserRepository userRepo)
+        public UserService(UserRepository userRepo, DashboardRepository dashboardRepo)
         {
             _userRepo = userRepo;
+            _dashboardRepo = dashboardRepo;
         }
 
         private static UserDto MapToDto(User u) => new UserDto
@@ -161,6 +163,20 @@ namespace BussinessLayer.Services
             {
                 user.AvailableTokens -= amount;
                 await _userRepo.UpdateAsync(user);
+
+                // Log token usage for dashboard analytics
+                try
+                {
+                    await _dashboardRepo.AddTokenUsageLogAsync(new TokenUsageLog
+                    {
+                        UserId = userId,
+                        TokensUsed = amount,
+                        Action = "chat",
+                        UsedAt = DateTime.UtcNow
+                    });
+                }
+                catch { /* Non-critical: don't fail the deduction if logging fails */ }
+
                 return true;
             }
 

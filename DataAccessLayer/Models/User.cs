@@ -32,4 +32,8 @@ public partial class User
     public virtual ICollection<LecturerUploadPermission> LecturerUploadPermissionGrantedByNavigations { get; set; } = new List<LecturerUploadPermission>();
 
     public virtual ICollection<LecturerUploadPermission> LecturerUploadPermissionLecturers { get; set; } = new List<LecturerUploadPermission>();
+
+    public virtual ICollection<ProUpgrade> ProUpgrades { get; set; } = new List<ProUpgrade>();
+
+    public virtual ICollection<TokenUsageLog> TokenUsageLogs { get; set; } = new List<TokenUsageLog>();
 }

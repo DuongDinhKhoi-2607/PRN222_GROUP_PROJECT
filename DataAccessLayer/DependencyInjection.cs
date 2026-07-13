@@ -22,6 +22,7 @@ namespace DataAccessLayer
             services.AddScoped<Repositories.MessageCitationRepository>();
             services.AddScoped<Repositories.UserRepository>();
             services.AddScoped<Repositories.LecturerUploadPermissionRepository>();
+            services.AddScoped<Repositories.DashboardRepository>();
 
             return services;
         }

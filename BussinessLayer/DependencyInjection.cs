@@ -34,6 +34,7 @@ namespace BussinessLayer
             services.AddScoped<IBenchmarkService, BenchmarkService>();
             services.AddSingleton<ITokenService, TokenService>();
             services.AddScoped<IVnPayService, VnPayService>();
+            services.AddScoped<IDashboardService, DashboardService>();
             return services;
         }
     }

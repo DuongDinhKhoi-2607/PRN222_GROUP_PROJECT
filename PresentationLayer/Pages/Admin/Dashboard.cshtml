@@ -1,0 +1,415 @@
+@page
+@model PresentationLayer.Pages.Admin.DashboardModel
+@{
+    ViewData["Title"] = "Dashboard Thống Kê";
+}
+
+<style>
+.dash-page { height: 100%; overflow-y: auto; padding: 2rem; }
+.dash-page::-webkit-scrollbar { width: 4px; }
+.dash-page::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+.dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+.dash-heading { font-size: 1.4rem; font-weight: 700; background: linear-gradient(135deg, #fff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: .65rem; }
+.dash-heading i { -webkit-text-fill-color: #a78bfa; }
+
+.filter-bar { display: flex; align-items: center; gap: .5rem; }
+.filter-btn { padding: .45rem .9rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary); font-size: .78rem; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: all var(--transition); }
+.filter-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.filter-btn.active { background: linear-gradient(135deg, var(--accent), #a78bfa); color: #fff; border-color: var(--accent); box-shadow: 0 4px 16px var(--accent-glow); }
+.filter-select { padding: .45rem .7rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: .78rem; font-family: 'Inter', sans-serif; cursor: pointer; }
+.filter-select:focus { outline: none; border-color: var(--accent); }
+.filter-select option { background: var(--bg-elevated); }
+
+/* Summary Cards */
+.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.summary-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; display: flex; align-items: center; gap: 1rem; transition: all var(--transition); position: relative; overflow: hidden; }
+.summary-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+.summary-card:nth-child(1)::before { background: linear-gradient(90deg, #6c63ff, #a78bfa); }
+.summary-card:nth-child(2)::before { background: linear-gradient(90deg, #00d4aa, #00b090); }
+.summary-card:nth-child(3)::before { background: linear-gradient(90deg, #ffb703, #ff9500); }
+.summary-card:nth-child(4)::before { background: linear-gradient(90deg, #ff4d6d, #ff758f); }
+.summary-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.summary-icon { width: 48px; height: 48px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.summary-icon.purple { background: rgba(108,99,255,.15); color: #a78bfa; }
+.summary-icon.teal { background: rgba(0,212,170,.12); color: var(--accent-2); }
+.summary-icon.amber { background: rgba(255,183,3,.12); color: var(--accent-warn); }
+.summary-icon.red { background: rgba(255,77,109,.12); color: var(--accent-danger); }
+.summary-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+.summary-label { font-size: .72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-top: .15rem; }
+.summary-sub { font-size: .7rem; color: var(--accent-2); margin-top: .25rem; font-weight: 500; }
+
+/* Charts */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+.chart-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.chart-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: .65rem; }
+.chart-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: .9rem; }
+.chart-icon.purple { background: rgba(108,99,255,.15); color: #a78bfa; }
+.chart-icon.teal { background: rgba(0,212,170,.12); color: var(--accent-2); }
+.chart-title { font-size: .9rem; font-weight: 600; color: var(--text-primary); }
+.chart-body { padding: 1rem 1.25rem; height: 300px; position: relative; }
+
+/* Recent Table */
+.recent-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.recent-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.recent-title { font-size: .95rem; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: .5rem; }
+.recent-table { width: 100%; border-collapse: collapse; }
+.recent-table th { padding: .75rem 1.25rem; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); text-align: left; border-bottom: 1px solid var(--border); background: var(--bg-elevated); }
+.recent-table td { padding: .7rem 1.25rem; font-size: .82rem; color: var(--text-primary); border-bottom: 1px solid var(--border); }
+.recent-table tbody tr:last-child td { border-bottom: none; }
+.recent-table tbody tr { transition: background var(--transition); }
+.recent-table tbody tr:hover { background: var(--bg-hover); }
+
+.badge-pro { display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .55rem; background: rgba(255,215,0,.12); border: 1px solid rgba(255,215,0,.25); border-radius: 999px; font-size: .7rem; font-weight: 600; color: gold; }
+.badge-amount { display: inline-flex; padding: .15rem .55rem; background: rgba(0,212,170,.12); border: 1px solid rgba(0,212,170,.25); border-radius: 999px; font-size: .72rem; font-weight: 600; color: var(--accent-2); }
+
+.empty-chart { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: .5rem; }
+.empty-chart i { font-size: 2rem; opacity: .3; }
+.empty-chart span { font-size: .82rem; }
+
+/* Live indicator */
+.live-dot { width: 8px; height: 8px; background: var(--accent-2); border-radius: 50%; animation: pulse-dot 2s infinite; display: inline-block; margin-right: .35rem; }
+
+@@media (max-width: 1100px) { .charts-grid { grid-template-columns: 1fr; } }
+@@media (max-width: 900px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+@@media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="dash-page">
+    <div class="dash-header">
+        <h1 class="dash-heading">
+            <i class="fa-solid fa-chart-pie"></i>
+            Dashboard Thống Kê
+        </h1>
+        <div class="filter-bar">
+            <span class="live-dot"></span>
+            <span style="font-size:.75rem;color:var(--accent-2);font-weight:600;margin-right:.5rem">LIVE</span>
+            <button class="filter-btn @(Model.GroupBy == "week" ? "active" : "")" onclick="changeFilter('week')">Tuần</button>
+            <button class="filter-btn @(Model.GroupBy == "month" ? "active" : "")" onclick="changeFilter('month')">Tháng</button>
+            <button class="filter-btn @(Model.GroupBy == "year" ? "active" : "")" onclick="changeFilter('year')">Năm</button>
+            <select class="filter-select" id="yearSelect" onchange="changeYear(this.value)">
+                @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 4; y--)
+                {
+                    <option value="@y" selected="@(Model.Year == y || (Model.Year == null && y == DateTime.Now.Year))">@y</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-icon purple"><i class="fa-solid fa-users"></i></div>
+            <div>
+                <div class="summary-value" id="totalStudents">@Model.Summary.TotalStudents</div>
+                <div class="summary-label">Tổng Sinh Viên</div>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon teal"><i class="fa-solid fa-crown"></i></div>
+            <div>
+                <div class="summary-value" id="totalPro">@Model.Summary.TotalProUsers</div>
+                <div class="summary-label">Người Dùng Pro</div>
+                <div class="summary-sub">@Model.Summary.ProConversionRate% tỷ lệ chuyển đổi</div>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon amber"><i class="fa-solid fa-coins"></i></div>
+            <div>
+                <div class="summary-value" id="totalRevenue">@Model.Summary.TotalRevenue.ToString("N0") ₫</div>
+                <div class="summary-label">Tổng Doanh Thu</div>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon red"><i class="fa-solid fa-bolt"></i></div>
+            <div>
+                <div class="summary-value" id="totalTokens">@Model.Summary.TotalTokensUsed.ToString("N0")</div>
+                <div class="summary-label">Token Đã Sử Dụng</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-icon purple"><i class="fa-solid fa-crown"></i></div>
+                <div class="chart-title">Sinh Viên Mua Gói Pro</div>
+            </div>
+            <div class="chart-body">
+                <canvas id="proChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-icon teal"><i class="fa-solid fa-bolt"></i></div>
+                <div class="chart-title">Sử Dụng Token</div>
+            </div>
+            <div class="chart-body">
+                <canvas id="tokenChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Chart (full width) -->
+    <div class="chart-card" style="margin-bottom: 1.5rem;">
+        <div class="chart-header">
+            <div class="chart-icon amber" style="background:rgba(255,183,3,.12);color:var(--accent-warn)"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="chart-title">Doanh Thu Theo Thời Gian</div>
+        </div>
+        <div class="chart-body">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Upgrades -->
+    <div class="recent-card">
+        <div class="recent-header">
+            <div class="recent-title">
+                <i class="fa-solid fa-clock-rotate-left" style="color:#a78bfa"></i>
+                Lịch Sử Nâng Cấp Pro Gần Đây
+            </div>
+        </div>
+        @if (Model.RecentUpgrades.Any())
+        {
+            <table class="recent-table">
+                <thead>
+                    <tr>
+                        <th>Sinh Viên</th>
+                        <th>Email</th>
+                        <th>Số Tiền</th>
+                        <th>Phương Thức</th>
+                        <th>Thời Gian</th>
+                    </tr>
+                </thead>
+                <tbody id="recentTableBody">
+                    @foreach (var u in Model.RecentUpgrades)
+                    {
+                        <tr>
+                            <td>
+                                <span class="badge-pro"><i class="fa-solid fa-crown" style="font-size:.6rem"></i> @u.UserName</span>
+                            </td>
+                            <td style="color:var(--text-secondary);font-size:.8rem">@u.Email</td>
+                            <td><span class="badge-amount">@u.Amount.ToString("N0") ₫</span></td>
+                            <td style="font-size:.8rem;color:var(--text-secondary)">@u.PaymentMethod</td>
+                            <td style="font-size:.78rem;color:var(--text-muted)">@u.UpgradedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="text-align:center;padding:3rem;color:var(--text-muted)">
+                <i class="fa-solid fa-receipt" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.75rem"></i>
+                <p>Chưa có giao dịch nâng cấp Pro nào.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        // ── Chart.js Config ──────────────────────────────────────────────────
+        const chartData = @Html.Raw(Model.ChartDataJson);
+        let proChart, tokenChart, revenueChart;
+
+        const chartDefaults = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(30,35,48,0.95)',
+                    borderColor: 'rgba(255,255,255,0.08)',
+                    borderWidth: 1,
+                    titleColor: '#e8eaf0',
+                    bodyColor: '#8b91a6',
+                    cornerRadius: 8,
+                    padding: 12,
+                    titleFont: { family: 'Inter', weight: '600' },
+                    bodyFont: { family: 'Inter' }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                    ticks: { color: '#5a6075', font: { family: 'Inter', size: 11 } }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                    ticks: { color: '#5a6075', font: { family: 'Inter', size: 11 } },
+                    beginAtZero: true
+                }
+            }
+        };
+
+        function createGradient(ctx, c1, c2) {
+            const g = ctx.createLinearGradient(0, 0, 0, 280);
+            g.addColorStop(0, c1);
+            g.addColorStop(1, c2);
+            return g;
+        }
+
+        function initCharts(data) {
+            const proLabels = data.proUpgrades.map(d => d.label);
+            const proValues = data.proUpgrades.map(d => d.value);
+            const tokenLabels = data.tokenUsage.map(d => d.label);
+            const tokenValues = data.tokenUsage.map(d => d.value);
+            const revenueValues = data.proUpgrades.map(d => d.revenue);
+
+            // Pro Chart
+            const proCtx = document.getElementById('proChart').getContext('2d');
+            if (proChart) proChart.destroy();
+            proChart = new Chart(proCtx, {
+                type: 'bar',
+                data: {
+                    labels: proLabels,
+                    datasets: [{
+                        label: 'Người dùng Pro',
+                        data: proValues,
+                        backgroundColor: createGradient(proCtx, 'rgba(108,99,255,0.8)', 'rgba(167,139,250,0.4)'),
+                        borderColor: '#6c63ff',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: { ...chartDefaults }
+            });
+
+            // Token Chart
+            const tokenCtx = document.getElementById('tokenChart').getContext('2d');
+            if (tokenChart) tokenChart.destroy();
+            tokenChart = new Chart(tokenCtx, {
+                type: 'line',
+                data: {
+                    labels: tokenLabels,
+                    datasets: [{
+                        label: 'Token sử dụng',
+                        data: tokenValues,
+                        borderColor: '#00d4aa',
+                        backgroundColor: createGradient(tokenCtx, 'rgba(0,212,170,0.25)', 'rgba(0,212,170,0.02)'),
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#00d4aa',
+                        pointBorderColor: '#1e2330',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: { ...chartDefaults }
+            });
+
+            // Revenue Chart
+            const revCtx = document.getElementById('revenueChart').getContext('2d');
+            if (revenueChart) revenueChart.destroy();
+            revenueChart = new Chart(revCtx, {
+                type: 'line',
+                data: {
+                    labels: proLabels,
+                    datasets: [{
+                        label: 'Doanh thu (₫)',
+                        data: revenueValues,
+                        borderColor: '#ffb703',
+                        backgroundColor: createGradient(revCtx, 'rgba(255,183,3,0.2)', 'rgba(255,183,3,0.02)'),
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#ffb703',
+                        pointBorderColor: '#1e2330',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        tooltip: {
+                            ...chartDefaults.plugins.tooltip,
+                            callbacks: {
+                                label: ctx => new Intl.NumberFormat('vi-VN').format(ctx.raw) + ' ₫'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize charts on page load
+        initCharts(chartData);
+
+        // ── Filter Functions ──────────────────────────────────────────────────
+        let currentGroupBy = '@Model.GroupBy';
+
+        function changeFilter(groupBy) {
+            currentGroupBy = groupBy;
+            const year = document.getElementById('yearSelect').value;
+            fetchChartData(groupBy, year);
+
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function changeYear(year) {
+            fetchChartData(currentGroupBy, year);
+        }
+
+        async function fetchChartData(groupBy, year) {
+            try {
+                const res = await fetch(`/Admin/Dashboard?handler=ChartData&groupBy=${groupBy}&year=${year}`);
+                const data = await res.json();
+                initCharts(data);
+            } catch (err) {
+                console.error('Failed to fetch chart data:', err);
+            }
+        }
+
+        // ── SignalR Real-time Updates ─────────────────────────────────────────
+        const dashConn = new signalR.HubConnectionBuilder()
+            .withUrl("/dashboardHub")
+            .withAutomaticReconnect()
+            .build();
+
+        dashConn.start().then(() => {
+            console.log("Dashboard SignalR: Connected!");
+            dashConn.invoke("JoinDashboard");
+        }).catch(err => console.error("Dashboard SignalR Error:", err));
+
+        dashConn.on("DashboardUpdated", (type, data) => {
+            console.log("Dashboard update:", type, data);
+            // Refresh chart data
+            const year = document.getElementById('yearSelect').value;
+            fetchChartData(currentGroupBy, year);
+
+            // Show toast notification
+            showDashToast(type === 'ProUpgrade' ? '🎉 Có sinh viên mới nâng cấp Pro!' : '⚡ Có hoạt động sử dụng token mới!');
+        });
+
+        dashConn.on("SummaryUpdated", (summary) => {
+            if (summary.totalStudents !== undefined) document.getElementById('totalStudents').textContent = summary.totalStudents;
+            if (summary.totalProUsers !== undefined) document.getElementById('totalPro').textContent = summary.totalProUsers;
+            if (summary.totalRevenue !== undefined) document.getElementById('totalRevenue').textContent = new Intl.NumberFormat('vi-VN').format(summary.totalRevenue) + ' ₫';
+            if (summary.totalTokensUsed !== undefined) document.getElementById('totalTokens').textContent = new Intl.NumberFormat('vi-VN').format(summary.totalTokensUsed);
+        });
+
+        function showDashToast(message) {
+            let container = document.getElementById("dash-toast");
+            if (!container) {
+                container = document.createElement("div");
+                container.id = "dash-toast";
+                container.style.cssText = "position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;";
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement("div");
+            toast.style.cssText = "background:rgba(30,30,45,0.92);border-left:4px solid #00d4aa;color:#fff;padding:12px 20px;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.37);font-family:'Inter',sans-serif;font-size:.85rem;backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);animation:msg-in .3s ease;";
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity .3s'; setTimeout(() => toast.remove(), 300); }, 4000);
+        }
+    </script>
+}

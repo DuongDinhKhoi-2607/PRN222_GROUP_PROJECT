@@ -56,6 +56,25 @@ namespace BussinessLayer.Services
                 Console.WriteLine("[Seed] Error adding content_hash column: " + ex.Message);
             }
 
+            // Auto-migration: Add uploaded_by column to documents table if not exists
+            try
+            {
+                await _db.Database.ExecuteSqlRawAsync(@"
+                    IF NOT EXISTS (
+                        SELECT * FROM sys.columns 
+                        WHERE object_id = OBJECT_ID('documents') AND name = 'uploaded_by'
+                    )
+                    BEGIN
+                        ALTER TABLE documents ADD uploaded_by BIGINT NULL;
+                    END
+                ");
+                Console.WriteLine("[Seed] Verified uploaded_by column in documents table");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Seed] Error adding uploaded_by column: " + ex.Message);
+            }
+
             // Hash existing documents if content_hash is null
             try
             {
@@ -123,6 +142,75 @@ namespace BussinessLayer.Services
                 Console.WriteLine("[Seed] Error adding token columns to users: " + ex.Message);
             }
 
+            // Auto-migration: Ensure subject_id is nullable in chat_sessions table
+            try
+            {
+                await _db.Database.ExecuteSqlRawAsync(@"
+                    ALTER TABLE chat_sessions ALTER COLUMN subject_id BIGINT NULL;
+                ");
+                Console.WriteLine("[Seed] Verified subject_id is nullable in chat_sessions table");
+
+                // Fix historical incorrect revenue data
+                await _db.Database.ExecuteSqlRawAsync(@"
+                    UPDATE pro_upgrades SET amount = 49000 WHERE amount = 99000;
+                ");
+                Console.WriteLine("[Seed] Fixed historical pro_upgrades revenue");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Seed] Error altering chat_sessions subject_id or updating pro_upgrades: " + ex.Message);
+            }
+
+            // Auto-migration: Create pro_upgrades table if not exists
+            try
+            {
+                await _db.Database.ExecuteSqlRawAsync(@"
+                    IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'pro_upgrades')
+                    BEGIN
+                        CREATE TABLE [dbo].[pro_upgrades](
+                            [id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                            [user_id] BIGINT NOT NULL,
+                            [amount] DECIMAL(18,2) NOT NULL,
+                            [payment_method] VARCHAR(50) NOT NULL DEFAULT 'VNPay',
+                            [transaction_id] NVARCHAR(255) NULL,
+                            [upgraded_at] DATETIME2(7) NULL DEFAULT (GETDATE()),
+                            CONSTRAINT [FK_pro_upgrades_users] FOREIGN KEY([user_id]) REFERENCES [dbo].[users]([id])
+                        );
+                        CREATE NONCLUSTERED INDEX [IX_pro_upgrades_user_id] ON [dbo].[pro_upgrades]([user_id]);
+                    END
+                ");
+                Console.WriteLine("[Seed] Verified pro_upgrades table");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Seed] Error creating pro_upgrades table: " + ex.Message);
+            }
+
+            // Auto-migration: Create token_usage_logs table if not exists
+            try
+            {
+                await _db.Database.ExecuteSqlRawAsync(@"
+                    IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'token_usage_logs')
+                    BEGIN
+                        CREATE TABLE [dbo].[token_usage_logs](
+                            [id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                            [user_id] BIGINT NOT NULL,
+                            [tokens_used] INT NOT NULL,
+                            [action] VARCHAR(50) NOT NULL DEFAULT 'chat',
+                            [used_at] DATETIME2(7) NULL DEFAULT (GETDATE()),
+                            CONSTRAINT [FK_token_usage_logs_users] FOREIGN KEY([user_id]) REFERENCES [dbo].[users]([id])
+                        );
+                        CREATE NONCLUSTERED INDEX [IX_token_usage_logs_user_id] ON [dbo].[token_usage_logs]([user_id]);
+                        CREATE NONCLUSTERED INDEX [IX_token_usage_logs_used_at] ON [dbo].[token_usage_logs]([used_at]);
+                    END
+                ");
+                Console.WriteLine("[Seed] Verified token_usage_logs table");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Seed] Error creating token_usage_logs table: " + ex.Message);
+            }
+
             // 1. ChunkingStrategy id=1, 2, 3
             if (!await _db.ChunkingStrategies.AnyAsync(s => s.Id == 1))
             {
@@ -144,10 +232,11 @@ namespace BussinessLayer.Services
             }
             if (!await _db.ChunkingStrategies.AnyAsync(s => s.Id == 3))
             {
-                await _db.Database.ExecuteSqlRawAsync(@"
+                var jsonParams = "{\"window\": 3, \"step\": 2}";
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
                     SET IDENTITY_INSERT chunking_strategies ON;
                     INSERT INTO chunking_strategies (id, name, chunk_size, chunk_overlap, description, params)
-                    VALUES (3, 'Sentence-Window (3 sentences)', 0, 0, 'Sentence-window chunking strategy (3 sentences, step 2)', '{""window"": 3, ""step"": 2}');
+                    VALUES (3, 'Sentence-Window (3 sentences)', 0, 0, 'Sentence-window chunking strategy (3 sentences, step 2)', {jsonParams});
                     SET IDENTITY_INSERT chunking_strategies OFF;");
                 Console.WriteLine("[Seed] Created ChunkingStrategy (id=3)");
             }
@@ -182,10 +271,15 @@ namespace BussinessLayer.Services
                 {
                     // Drop existing check constraint and recreate it to allow benchmarkmanager
                     await _db.Database.ExecuteSqlRawAsync(@"
-                        IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK_users_role')
+                        DECLARE @ConstraintName nvarchar(200);
+                        SELECT @ConstraintName = name FROM sys.check_constraints 
+                        WHERE parent_object_id = OBJECT_ID('users') AND definition LIKE '%role%';
+                        
+                        IF @ConstraintName IS NOT NULL
                         BEGIN
-                            ALTER TABLE users DROP CONSTRAINT CK_users_role;
+                            EXEC('ALTER TABLE users DROP CONSTRAINT ' + @ConstraintName);
                         END
+                        
                         ALTER TABLE users ADD CONSTRAINT CK_users_role CHECK (role IN ('admin', 'lecturer', 'student', 'benchmarkmanager'));
                     ");
                 }

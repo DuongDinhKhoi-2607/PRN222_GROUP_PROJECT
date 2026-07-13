@@ -45,9 +45,13 @@ public partial class RagchatbotDbContext : DbContext
 
     public virtual DbSet<MessageCitation> MessageCitations { get; set; }
 
+    public virtual DbSet<ProUpgrade> ProUpgrades { get; set; }
+
     public virtual DbSet<Subject> Subjects { get; set; }
 
     public virtual DbSet<TestQuestion> TestQuestions { get; set; }
+
+    public virtual DbSet<TokenUsageLog> TokenUsageLogs { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
@@ -581,6 +585,64 @@ public partial class RagchatbotDbContext : DbContext
             entity.Property(e => e.IsPro)
                 .HasDefaultValue(false)
                 .HasColumnName("is_pro");
+        });
+
+        modelBuilder.Entity<ProUpgrade>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.ToTable("pro_upgrades");
+
+            entity.HasIndex(e => e.UserId, "IX_pro_upgrades_user_id");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.Amount)
+                .HasColumnType("decimal(18,2)")
+                .HasColumnName("amount");
+            entity.Property(e => e.PaymentMethod)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasDefaultValue("VNPay")
+                .HasColumnName("payment_method");
+            entity.Property(e => e.TransactionId)
+                .HasMaxLength(255)
+                .HasColumnName("transaction_id");
+            entity.Property(e => e.UpgradedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnName("upgraded_at");
+
+            entity.HasOne(d => d.User).WithMany(p => p.ProUpgrades)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_pro_upgrades_users");
+        });
+
+        modelBuilder.Entity<TokenUsageLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.ToTable("token_usage_logs");
+
+            entity.HasIndex(e => e.UserId, "IX_token_usage_logs_user_id");
+            entity.HasIndex(e => e.UsedAt, "IX_token_usage_logs_used_at");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.TokensUsed).HasColumnName("tokens_used");
+            entity.Property(e => e.Action)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasDefaultValue("chat")
+                .HasColumnName("action");
+            entity.Property(e => e.UsedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnName("used_at");
+
+            entity.HasOne(d => d.User).WithMany(p => p.TokenUsageLogs)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_token_usage_logs_users");
         });
 
         OnModelCreatingPartial(modelBuilder);
