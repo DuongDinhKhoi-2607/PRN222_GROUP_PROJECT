@@ -1,0 +1,195 @@
+@page
+@model PresentationLayer.Pages.Payment.PaymentSuccessModel
+@{
+    ViewData["Title"] = "Thanh toán thành công";
+}
+
+<style>
+    .payment-result-page {
+        padding: 4rem 1rem;
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 100px);
+    }
+
+    .result-card-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 480px;
+    }
+
+    .success-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 120%;
+        height: 120%;
+        background: radial-gradient(circle, rgba(0, 212, 170, 0.25) 0%, rgba(0,0,0,0) 65%);
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .result-card {
+        background: rgba(28, 35, 32, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(0, 212, 170, 0.25);
+        border-radius: 24px;
+        /* Chỉnh lại padding dưới từ 3.5rem thành 3rem cho cân đối khoảng cách */
+        padding: 3.5rem 2.5rem 3rem 2.5rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 212, 170, 0.15);
+        position: relative;
+        text-align: center;
+    }
+    
+    .result-card::before {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        border-radius: 24px;
+        padding-top: 4px;
+        background: linear-gradient(90deg, #00d4aa, #00b894);
+        /* Ép viền trên ôm khít chặt chẽ theo border-radius của thẻ cha */
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .icon-wrapper {
+        width: 90px;
+        height: 90px;
+        margin: 0 auto 1.75rem;
+        background: rgba(0, 212, 170, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 25px rgba(0, 212, 170, 0.2) inset;
+        border: 1px solid rgba(0, 212, 170, 0.3);
+    }
+
+    .icon-wrapper i {
+        font-size: 3rem;
+        color: #00d4aa;
+        text-shadow: 0 0 15px rgba(0, 212, 170, 0.6);
+    }
+
+    .result-title {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(to right, #ffffff, #00d4aa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.5px;
+    }
+
+    .result-subtitle {
+        color: #b0b0c0;
+        font-size: 1rem;
+        margin-bottom: 2.5rem;
+        line-height: 1.5;
+    }
+
+    .info-box {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2.5rem;
+        text-align: left;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        color: #e0e0e0;
+        font-size: 0.95rem;
+    }
+
+    .info-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .info-label {
+        color: #9aa0b6;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #ffffff;
+        font-family: monospace;
+        font-size: 1.05rem;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-chat-now {
+        background: linear-gradient(135deg, #6c5ce7, #8e44ad);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 15px 20px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-chat-now:hover {
+        background: linear-gradient(135deg, #8e44ad, #6c5ce7);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(108, 92, 231, 0.5);
+        color: white;
+    }
+    
+    @@media (max-width: 576px) {
+        .result-card {
+            padding: 2.5rem 1.5rem;
+        }
+    }
+</style>
+
+<div class="payment-result-page">
+    <div class="result-card-wrapper">
+        <div class="success-glow"></div>
+        
+        <div class="result-card">
+            <div class="icon-wrapper">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            
+            <h2 class="result-title">Thanh Toán Thành Công!</h2>
+            <p class="result-subtitle">Cảm ơn bạn đã nâng cấp gói Pro. Trải nghiệm không giới hạn đã sẵn sàng.</p>
+            
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">Mã đơn hàng</span>
+                    <span class="info-value">@Model.OrderId</span>
+                </div>
+                <hr style="border-color: rgba(255,255,255,0.06); margin: 1rem 0;">
+                <div class="info-row">
+                    <span class="info-label">Mã giao dịch</span>
+                    <span class="info-value" style="color: #00d4aa;">@Model.TransactionId</span>
+                </div>
+            </div>
+
+            <a href="/ChatAI" class="btn-chat-now">
+                <i class="fa-solid fa-rocket"></i> Trải nghiệm Pro ngay
+            </a>
+        </div>
+    </div>
+</div>

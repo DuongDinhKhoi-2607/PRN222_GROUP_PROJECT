@@ -53,12 +53,12 @@ namespace PresentationLayer.Pages.Payment
                             .SendAsync("SummaryUpdated", summary);
 
                         TempData["SuccessMessage"] = "Chúc mừng! Bạn đã nâng cấp thành công lên gói Pro. Giờ đây bạn có thể Chat thoải mái không giới hạn!";
-                        return RedirectToPage("/Upgrade/Index");
+                        return RedirectToPage("PaymentSuccess", new { orderId = ResponseModel.OrderId, transactionId = ResponseModel.TransactionId });
                     }
                 }
             }
 
-            return Page();
+            return RedirectToPage("PaymentFailed", new { orderId = ResponseModel.OrderId, errorCode = ResponseModel.VnPayResponseCode });
         }
     }
 }
