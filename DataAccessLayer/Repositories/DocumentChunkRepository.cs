@@ -60,8 +60,15 @@ namespace DataAccessLayer.Repositories
 
         public async Task DeleteByDocumentIdAsync(long documentId)
         {
+            var embeddings = await _db.ChunkEmbeddings.Where(e => e.Chunk.DocumentId == documentId).ToListAsync();
+            _db.ChunkEmbeddings.RemoveRange(embeddings);
+            
+            var citations = await _db.MessageCitations.Where(c => c.DocumentId == documentId).ToListAsync();
+            _db.MessageCitations.RemoveRange(citations);
+            
             var chunks = await _db.DocumentChunks.Where(c => c.DocumentId == documentId).ToListAsync();
             _db.DocumentChunks.RemoveRange(chunks);
+            
             await _db.SaveChangesAsync();
         }
 
