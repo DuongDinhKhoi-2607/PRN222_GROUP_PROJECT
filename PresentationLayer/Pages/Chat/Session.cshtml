@@ -33,16 +33,16 @@
         }
 
     .chat-layout {
-    display: flex;
-    height: calc(100vh - 80px);
-    margin-top: 16px;
-    background: var(--chat-bg);
-    font-family: 'Inter', sans-serif;
-    border-radius: 16px;
-    border: 1px solid var(--chat-border);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
-}
+        display: flex;
+        height: calc(100vh - 80px);
+        margin-top: 16px;
+        background: var(--chat-bg);
+        font-family: 'Inter', sans-serif;
+        border-radius: 16px;
+        border: 1px solid var(--chat-border);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
 
     /* Sidebar */
     .chat-sidebar {
@@ -55,7 +55,6 @@
         z-index: 10;
     }
 
-    /* Đã thêm: Đồng bộ chiều cao thanh header Sidebar (70px) và kéo viền ngang */
     .sidebar-header {
         height: 70px;
         padding: 0 1rem;
@@ -135,7 +134,6 @@
         position: relative;
     }
 
-    /* Đã sửa: Khóa chiều cao 70px y hệt Sidebar để 2 bên thẳng hàng tắp lự */
     .chat-header {
         height: 70px;
         padding: 0 1.5rem;
@@ -245,6 +243,10 @@
         align-items: flex-end;
     }
 
+    .msg-row.bot .msg-body {
+        align-items: flex-start;
+    }
+
     .msg-bubble {
         padding: 0.85rem 1.2rem;
         font-size: 0.95rem;
@@ -270,36 +272,47 @@
         color: #64748b;
     }
 
-    /* Typing Indicator */
-    .typing-dots {
-        display: flex;
-        gap: 4px;
-        padding: 0.5rem;
+    /* MỚI: Typing Indicator chuẩn Messenger style */
+    .typing-indicator {
+        background: var(--msg-bot-bg);
+        border: 1px solid var(--chat-border);
+        border-radius: 18px 18px 18px 4px;
+        backdrop-filter: blur(10px);
+        padding: 12px 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        height: 42px; /* Viên thuốc xinh xắn */
     }
 
-        .typing-dots span {
+        .typing-indicator span {
             width: 6px;
             height: 6px;
             background: #a78bfa;
             border-radius: 50%;
-            animation: typing 1.4s infinite ease-in-out both;
+            animation: typingBounce 1.4s infinite ease-in-out both;
+            opacity: 0.6;
         }
 
-            .typing-dots span:nth-child(1) {
+            .typing-indicator span:nth-child(1) {
                 animation-delay: -0.32s;
             }
 
-            .typing-dots span:nth-child(2) {
+            .typing-indicator span:nth-child(2) {
                 animation-delay: -0.16s;
             }
 
-    @@keyframes typing {
+    @@keyframes typingBounce {
         0%, 80%, 100% {
-            transform: scale(0);
+            transform: translateY(0);
+            opacity: 0.4;
         }
 
         40% {
-            transform: scale(1);
+            transform: translateY(-4px);
+            opacity: 1;
         }
     }
 
@@ -369,13 +382,12 @@
 
 <div class="chat-layout">
     <div class="chat-sidebar">
-        <!-- Đã bọc nút tạo mới vào class sidebar-header -->
         <div class="sidebar-header">
             <a asp-page="Index" class="btn-new-chat">
                 <i class="fa-solid fa-plus"></i> Tạo phiên mới
             </a>
         </div>
-        
+
         <div style="padding: 1.25rem 1rem 1rem; flex: 1; overflow-y: auto;">
             <div style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 0.5rem;">
                 Gần đây
@@ -477,7 +489,7 @@
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 if (this.value.trim() !== '') {
-                    btnSend.click(); 
+                    btnSend.click();
                 }
             }
         });
@@ -510,12 +522,13 @@
                 </div>
             </div>`;
 
+            // MỚI: Gọi thẳng class typing-indicator sạch sẽ
             const typingHtml = `
             <div class="msg-row bot">
                 <div class="msg-avatar"><i class="fa-solid fa-robot"></i></div>
                 <div class="msg-body">
-                    <div class="msg-bubble" style="padding: 0.6rem 1rem;">
-                        <div class="typing-dots"><span></span><span></span><span></span></div>
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
                     </div>
                 </div>
             </div>`;
