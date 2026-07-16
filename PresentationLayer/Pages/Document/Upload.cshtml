@@ -85,19 +85,31 @@
             </div>
         }
 
-        <div class="alert-success-bar" id="successAlert" style="display: none; margin: 1.5rem 2rem 0; padding: .9rem 1.25rem; background: rgba(0,212,170,.08); border: 1px solid rgba(0,212,170,.2); border-radius: var(--radius-md); color: var(--accent-2); font-size: .85rem; align-items: flex-start; gap: .75rem;">
-            <i class="fa-solid fa-circle-check" style="flex-shrink:0;margin-top:.1rem"></i>
-            <div id="successText">Upload thành công!</div>
-        </div>
-
-        <div class="alert-err" id="errorAlert" style="display: none; margin: 1.5rem 2rem 0; padding: .9rem 1.25rem; background: rgba(255,77,109,.08); border: 1px solid rgba(255,77,109,.2); border-radius: var(--radius-md); color: #ff6b84; font-size: .85rem; align-items: flex-start; gap: .75rem;">
-            <i class="fa-solid fa-circle-exclamation" style="flex-shrink:0;margin-top:.1rem"></i>
-            <div id="errorText">Có lỗi xảy ra!</div>
-        </div>
-
         <form id="uploadForm" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+            <input type="hidden" asp-for="ReturnUrl" />
+            <input type="hidden" asp-for="DuplicateId" />
+            
             <div class="form-card-body">
+
+                @if (Model.IsDuplicateDetected)
+                {
+                    <div class="alert-err" style="margin-bottom: 1.5rem; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: #b45309;">
+                        <i class="fa-solid fa-triangle-exclamation" style="flex-shrink:0;margin-top:.1rem; color: #f59e0b;"></i>
+                        <div>
+                            <strong>Phát hiện trùng lặp:</strong> Tài liệu của bạn giống tới <strong>@Model.DuplicateSimilarity%</strong> so với tài liệu <strong>"@Model.DuplicateTitle"</strong> trong môn học <strong>"@Model.DuplicateSubject"</strong>.<br/><br/>
+                            <div style="display:flex; flex-direction:column; gap:.5rem; margin-top:.75rem;">
+                                <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer;">
+                                    <input type="radio" asp-for="DuplicateAction" value="replace" required />
+                                    <span style="font-weight:600;">Thay thế tài liệu cũ</span> (Xóa tài liệu cũ và tải lên tài liệu mới)
+                                </label>
+                                <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer;">
+                                    <input type="radio" asp-for="DuplicateAction" value="keepBoth" required />
+                                    <span style="font-weight:600;">Giữ cả hai tài liệu</span> (Tiếp tục lưu song song tài liệu mới)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                }
 
                 <div class="field-group">
                     <label class="field-label">Tệp tài liệu <span class="req">*</span></label>
@@ -117,12 +129,12 @@
 
                 <div class="field-group">
                     <label class="field-label" for="title">Tiêu đề tài liệu <span class="req">*</span></label>
-                    <input type="text" id="title" name="title" class="field-input" placeholder="VD: Chương 1 – Giới thiệu" required />
+                    <input type="text" asp-for="Title" class="field-input" placeholder="VD: Chương 1 – Giới thiệu" required />
                 </div>
 
                 <div class="field-group">
                     <label class="field-label" for="subjectId">Môn học <span class="req">*</span></label>
-                    <select id="subjectId" name="subjectId" class="field-input" required>
+                    <select asp-for="SubjectId" class="field-input" required>
                         <option value="">-- Chọn môn học --</option>
                         @if (Model.Subjects != null)
                         {
@@ -136,15 +148,15 @@
 
                 <div class="field-group">
                     <label class="field-label" for="strategyId">Chiến lược Chunking</label>
-                    <select id="strategyId" name="strategyId" class="field-input">
+                    <select asp-for="StrategyId" class="field-input">
                         <option value="1">Theo đoạn (Mặc định)</option>
                         <option value="2">Theo số ký tự</option>
                     </select>
                 </div>
 
-                <div class="field-group" id="maxCharsGroup" style="display: none;">
+                <div class="field-group" id="maxCharsGroup" style="@(Model.StrategyId == 2 ? "display: block;" : "display: none;")">
                     <label class="field-label" for="maxChars">Số lượng ký tự tối đa mỗi Chunk</label>
-                    <input type="number" id="maxChars" name="maxChars" class="field-input" value="1000" min="100" />
+                    <input type="number" asp-for="MaxChars" class="field-input" min="100" />
                 </div>
 
                 <div class="progress-container" id="progressContainer" style="display: none; margin-bottom: 1.5rem;">
@@ -169,54 +181,18 @@
         </form>
     </div>
 
-    <!-- Similarity Choice Modal -->
-    <div id="similarityModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 1.5rem;">
-        <div style="background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); max-width: 520px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4); overflow: hidden;">
-            <div style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border); background: var(--bg-elevated); display: flex; align-items: center; gap: .75rem;">
-                <div style="width: 38px; height: 38px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 1.1rem;"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                <div style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem;">Phát hiện trùng lặp nội dung</div>
-            </div>
-            <div style="padding: 2rem; color: var(--text-secondary); font-size: .9rem; line-height: 1.5;">
-                <p id="similarityMessage" style="margin-bottom: 1.5rem; color: var(--text-primary);"></p>
-                <div style="display: flex; flex-direction: column; gap: .75rem;">
-                    <button type="button" id="btnReplace" class="sim-btn">
-                        <i class="fa-solid fa-arrows-rotate" style="color: var(--accent-2); font-size: 1.1rem; width: 20px;"></i>
-                        <div>
-                            <div style="color: var(--text-primary); font-size: .85rem; font-weight: 600;">Thay thế tài liệu cũ</div>
-                            <div style="color: var(--text-muted); font-size: .75rem; font-weight: 400; margin-top: .15rem; text-align: left;">Xóa tài liệu cũ và tải lên tài liệu mới.</div>
-                        </div>
-                    </button>
-                    <button type="button" id="btnKeepBoth" class="sim-btn">
-                        <i class="fa-solid fa-copy" style="color: #3b82f6; font-size: 1.1rem; width: 20px;"></i>
-                        <div>
-                            <div style="color: var(--text-primary); font-size: .85rem; font-weight: 600;">Giữ cả hai tài liệu</div>
-                            <div style="color: var(--text-muted); font-size: .75rem; font-weight: 400; margin-top: .15rem; text-align: left;">Tiếp tục lưu tài liệu mới song song với tài liệu cũ.</div>
-                        </div>
-                    </button>
-                    <button type="button" id="btnDiscard" class="sim-btn">
-                        <i class="fa-solid fa-ban" style="color: #ef4444; font-size: 1.1rem; width: 20px;"></i>
-                        <div>
-                            <div style="color: var(--text-primary); font-size: .85rem; font-weight: 600;">Hủy tải lên</div>
-                            <div style="color: var(--text-muted); font-size: .75rem; font-weight: 400; margin-top: .15rem; text-align: left;">Giữ lại tài liệu cũ và bỏ tệp vừa tải lên.</div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
 <script>
 const dz = document.getElementById('dropZone');
 const fi = document.getElementById('fileInput');
-const tInput = document.getElementById('title');
+const tInput = document.getElementById('Title');
+
 ['dragover','dragenter'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.add('dragover'); }));
 ['dragleave','drop'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.remove('dragover'); }));
 dz.addEventListener('drop', ev => { 
     ev.preventDefault();
     if(ev.dataTransfer.files && ev.dataTransfer.files.length > 0) {
-        fi.files = ev.dataTransfer.files; // Assign dropped files to input
+        fi.files = ev.dataTransfer.files; 
         setFile(ev.dataTransfer.files[0]); 
     }
 });
@@ -226,8 +202,8 @@ function setFile(f) {
     document.getElementById('dropSub').textContent = (f.size/1024).toFixed(1) + ' KB – đã chọn';
     if(!tInput.value) tInput.value = f.name.replace(/\.[^.]+$/, '');
 }
-const uploadForm = document.getElementById('uploadForm');
-const strategyIdSelect = document.getElementById('strategyId');
+
+const strategyIdSelect = document.getElementById('StrategyId');
 const maxCharsGroup = document.getElementById('maxCharsGroup');
 if(strategyIdSelect && maxCharsGroup) {
     strategyIdSelect.addEventListener('change', function() {
@@ -237,132 +213,6 @@ if(strategyIdSelect && maxCharsGroup) {
             maxCharsGroup.style.display = 'none';
         }
     });
-}
-uploadForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    submitForm(formData);
-});
-
-function submitForm(formData) {
-    const xhr = new XMLHttpRequest();
-    
-    document.getElementById('successAlert').style.display = 'none';
-    document.getElementById('errorAlert').style.display = 'none';
-    
-    const progressContainer = document.getElementById('progressContainer');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    const btnSubmit = document.querySelector('.btn-submit');
-    
-    progressContainer.style.display = 'block';
-    progressBar.style.width = '0%';
-    progressText.innerText = '0%';
-    btnSubmit.disabled = true;
-    
-    let processingInterval;
-    
-    xhr.upload.addEventListener('progress', function(e) {
-        if (e.lengthComputable) {
-            // Dành 50% thanh tiến trình cho việc upload file qua mạng
-            const uploadPercent = Math.round((e.loaded / e.total) * 50);
-            progressBar.style.width = uploadPercent + '%';
-            progressText.innerText = `Đang tải lên: ${uploadPercent}%`;
-            
-            // Khi upload xong, bắt đầu giả lập tiến trình xử lý trên server (50% -> 95%)
-            if (e.loaded === e.total && !processingInterval) {
-                progressText.innerText = 'Đang phân tích & trích xuất nội dung... 50%';
-                let currentProgress = 50;
-                processingInterval = setInterval(() => {
-                    if (currentProgress < 95) {
-                        // Tăng ngẫu nhiên một khoảng nhỏ mỗi 500ms
-                        currentProgress += (Math.random() * 1.5 + 0.5);
-                        if (currentProgress > 95) currentProgress = 95;
-                        progressBar.style.width = currentProgress + '%';
-                        progressText.innerText = `Đang so sánh độ trùng lặp... ${Math.round(currentProgress)}%`;
-                    }
-                }, 500);
-            }
-        }
-    });
-    
-    xhr.onload = function() {
-        if (processingInterval) clearInterval(processingInterval);
-        progressBar.style.width = '100%';
-        progressText.innerText = 'Hoàn tất! 100%';
-        
-        setTimeout(() => {
-            btnSubmit.disabled = false;
-            progressContainer.style.display = 'none';
-            
-            try {
-                const res = JSON.parse(xhr.responseText);
-                if (res.isSimilar) {
-                    showSimilarityDialog(res.similarity, res.duplicateTitle, res.duplicateSubject, res.duplicateId);
-                } else if (res.success) {
-                    document.getElementById('successAlert').style.display = 'flex';
-                    document.getElementById('successText').innerText = res.message;
-                    uploadForm.reset();
-                    document.getElementById('dropTitle').textContent = 'Kéo & thả file vào đây';
-                    document.getElementById('dropSub').textContent = 'hoặc click để chọn file từ máy tính';
-                } else {
-                    document.getElementById('errorAlert').style.display = 'flex';
-                    document.getElementById('errorText').innerText = res.message || 'Có lỗi xảy ra khi upload.';
-                }
-            } catch (err) {
-                if (xhr.status === 200 && xhr.responseURL.includes('Index')) {
-                    document.getElementById('successAlert').style.display = 'flex';
-                    document.getElementById('successText').innerText = 'Tài liệu đã được upload và xử lý thành công!';
-                    uploadForm.reset();
-                    document.getElementById('dropTitle').textContent = 'Kéo & thả file vào đây';
-                    document.getElementById('dropSub').textContent = 'hoặc click để chọn file từ máy tính';
-                } else {
-                    document.getElementById('errorAlert').style.display = 'flex';
-                    document.getElementById('errorText').innerText = 'Upload failed. Status: ' + xhr.status;
-                }
-            }
-        }, 500);
-    };
-    
-    xhr.onerror = function() {
-        if (processingInterval) clearInterval(processingInterval);
-        btnSubmit.disabled = false;
-        progressContainer.style.display = 'none';
-        document.getElementById('errorAlert').style.display = 'flex';
-        document.getElementById('errorText').innerText = 'Lỗi kết nối. Không thể upload.';
-    };
-    
-    xhr.open('POST', uploadForm.action || window.location.href, true);
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    xhr.send(formData);
-}
-
-function showSimilarityDialog(similarity, title, subject, duplicateId) {
-    const modal = document.getElementById('similarityModal');
-    const msg = document.getElementById('similarityMessage');
-    msg.innerHTML = `Tài liệu của bạn giống tới <strong style="color:#f59e0b; font-size:1.1rem;">${similarity}%</strong> so với tài liệu <strong>"${title}"</strong> đã tồn tại trong môn học <strong>"${subject}"</strong>.<br/><br/>Bạn vui lòng chọn hành động tiếp theo:`;
-    modal.style.display = 'flex';
-    
-    document.getElementById('btnReplace').onclick = () => handleSimilarityAction('replace', duplicateId);
-    document.getElementById('btnKeepBoth').onclick = () => handleSimilarityAction('keepBoth', duplicateId);
-    document.getElementById('btnDiscard').onclick = () => {
-        modal.style.display = 'none';
-        document.getElementById('errorAlert').style.display = 'flex';
-        document.getElementById('errorText').innerText = 'Đã hủy tải lên tài liệu.';
-        uploadForm.reset();
-        document.getElementById('dropTitle').textContent = 'Kéo & thả file vào đây';
-        document.getElementById('dropSub').textContent = 'hoặc click để chọn file từ máy tính';
-    };
-}
-
-function handleSimilarityAction(action, duplicateId) {
-    document.getElementById('similarityModal').style.display = 'none';
-    
-    const formData = new FormData(uploadForm);
-    formData.append('duplicateAction', action);
-    formData.append('duplicateId', duplicateId);
-    
-    submitForm(formData);
 }
 </script>
 }

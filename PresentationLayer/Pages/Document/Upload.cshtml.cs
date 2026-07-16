@@ -12,6 +12,7 @@ using BussinessLayer.Interfaces;
 using BussinessLayer.DTOs;
 using Microsoft.AspNetCore.SignalR;
 using PresentationLayer.Hubs;
+using System.ComponentModel.DataAnnotations;
 
 namespace PresentationLayer.Pages.Document
 {
@@ -43,6 +44,32 @@ namespace PresentationLayer.Pages.Document
 
         public string? ReturnUrl { get; set; }
         public IEnumerable<SubjectDto> Subjects { get; set; } = new List<SubjectDto>();
+
+        [BindProperty]
+        public string Title { get; set; }
+
+        [BindProperty]
+        public long SubjectId { get; set; }
+
+        [BindProperty]
+        public long? ChapterId { get; set; }
+
+        [BindProperty]
+        public long StrategyId { get; set; } = 1;
+
+        [BindProperty]
+        public int? MaxChars { get; set; } = 1000;
+
+        [BindProperty]
+        public string? DuplicateAction { get; set; }
+
+        [BindProperty]
+        public long? DuplicateId { get; set; }
+
+        public bool IsDuplicateDetected { get; set; }
+        public double DuplicateSimilarity { get; set; }
+        public string DuplicateTitle { get; set; }
+        public string DuplicateSubject { get; set; }
 
         private async Task LoadSubjectsAsync()
         {
@@ -88,16 +115,7 @@ namespace PresentationLayer.Pages.Document
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(
-            IFormFile file, 
-            string title, 
-            long subjectId, 
-            long? chapterId, 
-            string? returnUrl,
-            string? duplicateAction = null,
-            long? duplicateId = null,
-            long strategyId = 1,
-            int? maxChars = null)
+        public async Task<IActionResult> OnPostAsync(IFormFile file, string? returnUrl)
         {
             var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -108,11 +126,9 @@ namespace PresentationLayer.Pages.Document
                 if (userIdClaim == null || !long.TryParse(userIdClaim.Value, out var lecturerId))
                     return Unauthorized();
 
-                var hasPermission = await _permissionService.HasUploadPermissionAsync(lecturerId, subjectId);
+                var hasPermission = await _permissionService.HasUploadPermissionAsync(lecturerId, SubjectId);
                 if (!hasPermission)
                 {
-                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                        return new JsonResult(new { success = false, message = "Bạn không có quyền upload tài liệu cho môn học này." });
                     TempData["ErrorMessage"] = "Bạn không có quyền upload tài liệu cho môn học này.";
                     return RedirectToPage("Index");
                 }
@@ -122,58 +138,48 @@ namespace PresentationLayer.Pages.Document
 
             if (file == null)
             {
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return new JsonResult(new { success = false, message = "Vui lòng chọn tệp để upload." });
                 ModelState.AddModelError("", "Vui lòng chọn tệp để upload.");
                 return Page();
             }
 
-            var subject = await _subjectService.GetByIdAsync(subjectId);
+            var subject = await _subjectService.GetByIdAsync(SubjectId);
             if (subject == null)
             {
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return new JsonResult(new { success = false, message = $"Môn học Id={subjectId} không tồn tại." });
-                ModelState.AddModelError("", $"Môn học Id={subjectId} không tồn tại.");
+                ModelState.AddModelError("", $"Môn học không tồn tại.");
                 return Page();
             }
 
-            if (chapterId.HasValue)
+            if (ChapterId.HasValue)
             {
-                var chapterExists = await _chapterService.ExistsAsync(chapterId.Value);
+                var chapterExists = await _chapterService.ExistsAsync(ChapterId.Value);
                 if (!chapterExists)
                 {
-                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                        return new JsonResult(new { success = false, message = $"Chapter Id={chapterId.Value} không tồn tại." });
-                    ModelState.AddModelError("", $"Chapter Id={chapterId.Value} không tồn tại.");
+                    ModelState.AddModelError("", $"Chapter không tồn tại.");
                     return Page();
                 }
             }
 
             // If duplicateAction is replace, delete the old file first
-            if (duplicateAction == "replace" && duplicateId.HasValue)
+            if (DuplicateAction == "replace" && DuplicateId.HasValue)
             {
                 try
                 {
-                    await _docService.DeleteAsync(duplicateId.Value);
+                    await _docService.DeleteAsync(DuplicateId.Value);
                 }
                 catch (Exception ex)
                 {
-                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                        return new JsonResult(new { success = false, message = "Không thể xóa tài liệu cũ: " + ex.Message });
                     ModelState.AddModelError("", "Không thể xóa tài liệu cũ: " + ex.Message);
                     return Page();
                 }
             }
 
             // Only run similarity/duplicate check if we are not skipping it (i.e. keepBoth is not chosen, and replace is not already completed)
-            if (duplicateAction != "keepBoth" && duplicateAction != "replace")
+            if (DuplicateAction != "keepBoth" && DuplicateAction != "replace")
             {
                 // 1. Check for duplicate document name or title in this subject
-                var existingDocs = await _docService.GetBySubjectIdAsync(subjectId);
-                if (existingDocs.Any(d => d.Title.Equals(title, StringComparison.OrdinalIgnoreCase) || d.FileName.Equals(file.FileName, StringComparison.OrdinalIgnoreCase)))
+                var existingDocs = await _docService.GetBySubjectIdAsync(SubjectId);
+                if (existingDocs.Any(d => d.Title.Equals(Title, StringComparison.OrdinalIgnoreCase) || d.FileName.Equals(file.FileName, StringComparison.OrdinalIgnoreCase)))
                 {
-                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                        return new JsonResult(new { success = false, message = "Đã có tài liệu trùng tên file hoặc tiêu đề trong môn học này." });
                     ModelState.AddModelError("", "Đã có tài liệu trùng tên file hoặc tiêu đề trong môn học này.");
                     return Page();
                 }
@@ -183,19 +189,14 @@ namespace PresentationLayer.Pages.Document
                 if (similarity >= 0.6 && similarDoc != null)
                 {
                     var simPercent = Math.Round(similarity * 100, 1);
-                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    {
-                        return new JsonResult(new
-                        {
-                            isSimilar = true,
-                            similarity = simPercent,
-                            duplicateId = similarDoc.Id,
-                            duplicateTitle = similarDoc.Title,
-                            duplicateSubject = $"{similarDoc.SubjectCode} - {similarDoc.SubjectName}"
-                        });
-                    }
-
-                    ModelState.AddModelError("", $"Tài liệu này giống {simPercent}% với tài liệu '{similarDoc.Title}' trong môn '{similarDoc.SubjectCode}'.");
+                    
+                    IsDuplicateDetected = true;
+                    DuplicateSimilarity = simPercent;
+                    DuplicateId = similarDoc.Id;
+                    DuplicateTitle = similarDoc.Title;
+                    DuplicateSubject = $"{similarDoc.SubjectCode} - {similarDoc.SubjectName}";
+                    
+                    ModelState.AddModelError("", $"Phát hiện trùng lặp! Tài liệu này giống {simPercent}% với tài liệu '{similarDoc.Title}' trong môn '{similarDoc.SubjectCode}'. Vui lòng chọn hành động bên dưới và chọn lại file để tiếp tục.");
                     return Page();
                 }
             }
@@ -206,18 +207,13 @@ namespace PresentationLayer.Pages.Document
 
             try
             {
-                var doc = await _ingest.IngestAsync(file, title, subjectId, chapterId, userId, strategyId, maxChars);
+                var doc = await _ingest.IngestAsync(file, Title, SubjectId, ChapterId, userId, StrategyId, MaxChars);
 
                 // Fetch details with subject/user name populated for the client UI
                 var docDto = await _docService.GetByIdWithSubjectAsync(doc.Id);
                 if (docDto != null)
                 {
                     await _hubContext.Clients.All.SendAsync("ReceiveNewDocument", docDto);
-                }
-
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                {
-                    return new JsonResult(new { success = true, message = "Tài liệu đã được upload và xử lý thành công!" });
                 }
 
                 TempData["SuccessMessage"] = "Tài liệu đã được upload và xử lý thành công!";
@@ -228,11 +224,6 @@ namespace PresentationLayer.Pages.Document
             catch (Exception ex)
             {
                 var errMsg = ex.InnerException?.Message ?? ex.Message;
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                {
-                    return new JsonResult(new { success = false, message = "Lỗi: " + errMsg });
-                }
-
                 ModelState.AddModelError("", "Lỗi: " + errMsg);
                 return Page();
             }
