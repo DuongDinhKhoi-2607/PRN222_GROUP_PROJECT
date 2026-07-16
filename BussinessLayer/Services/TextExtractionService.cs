@@ -13,6 +13,7 @@ namespace BussinessLayer.Services
             var ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
             if (ext == ".pdf") return Task.FromResult(ExtractTextFromPdf(filePath));
             if (ext == ".docx") return Task.FromResult(ExtractTextFromDocx(filePath));
+            if (ext == ".pptx") return Task.FromResult(ExtractTextFromPptx(filePath));
             return Task.FromResult(System.IO.File.ReadAllText(filePath));
         }
 
@@ -29,6 +30,27 @@ namespace BussinessLayer.Services
             using var doc = WordprocessingDocument.Open(path, false);
             var body = doc.MainDocumentPart?.Document?.Body;
             return body?.InnerText ?? string.Empty;
+        }
+
+        private static string ExtractTextFromPptx(string path)
+        {
+            using var doc = PresentationDocument.Open(path, false);
+            var sb = new StringBuilder();
+            var presentationPart = doc.PresentationPart;
+            if (presentationPart?.SlideParts != null)
+            {
+                foreach (var slidePart in presentationPart.SlideParts)
+                {
+                    if (slidePart.Slide != null)
+                    {
+                        foreach (var text in slidePart.Slide.Descendants<DocumentFormat.OpenXml.Drawing.Text>())
+                        {
+                            sb.AppendLine(text.Text);
+                        }
+                    }
+                }
+            }
+            return sb.ToString();
         }
     }
 }
