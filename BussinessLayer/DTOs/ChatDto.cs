@@ -10,6 +10,8 @@ namespace BussinessLayer.DTOs
         public string? Title { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public string? SubjectName { get; set; }
+        public string? SubjectCode { get; set; }
     }
 
     public class ChatMessageDto
@@ -19,6 +21,7 @@ namespace BussinessLayer.DTOs
         public string Role { get; set; } = null!;
         public string Content { get; set; } = null!;
         public DateTime? CreatedAt { get; set; }
+        public IEnumerable<MessageCitationDto> Citations { get; set; } = new List<MessageCitationDto>();
     }
 
     public class MessageCitationDto
@@ -28,5 +31,6 @@ namespace BussinessLayer.DTOs
         public long DocumentId { get; set; }
         public double? RelevanceScore { get; set; }
         public string? Snippet { get; set; }
+        public string? DocumentTitle { get; set; }
     }
 }

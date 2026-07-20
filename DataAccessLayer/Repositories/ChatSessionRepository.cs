@@ -20,10 +20,17 @@ namespace DataAccessLayer.Repositories
 
         public async Task<IEnumerable<ChatSession>> GetByUserIdAsync(long userId)
         {
-            return await _db.ChatSessions.Where(s => s.UserId == userId).OrderByDescending(s => s.UpdatedAt ?? s.CreatedAt).ToListAsync();
+            return await _db.ChatSessions
+                .Include(s => s.Subject)
+                .Where(s => s.UserId == userId)
+                .OrderByDescending(s => s.UpdatedAt ?? s.CreatedAt)
+                .ToListAsync();
         }
 
-        public async Task<ChatSession?> GetByIdAsync(long id) => await _db.ChatSessions.FindAsync(id);
+        public async Task<ChatSession?> GetByIdAsync(long id) =>
+            await _db.ChatSessions
+                .Include(s => s.Subject)
+                .FirstOrDefaultAsync(s => s.Id == id);
 
         public async Task UpdateTitleAsync(long sessionId, string title)
         {
@@ -31,6 +38,17 @@ namespace DataAccessLayer.Repositories
             if (session != null)
             {
                 session.Title = title;
+                await _db.SaveChangesAsync();
+            }
+        }
+
+        public async Task UpdateSubjectAsync(long sessionId, long? subjectId)
+        {
+            var session = await _db.ChatSessions.FindAsync(sessionId);
+            if (session != null)
+            {
+                session.SubjectId = subjectId;
+                session.UpdatedAt = DateTime.UtcNow;
                 await _db.SaveChangesAsync();
             }
         }

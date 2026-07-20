@@ -49,8 +49,6 @@ namespace PresentationLayer.Pages.Document
             Subjects = await _subjectService.GetAllAsync();
 
             var docs = await _docService.GetAllAsync();
-            // Chỉ hiển thị các tài liệu đã xử lý thành công (status là indexed hoặc ready)
-            docs = docs.Where(d => d.Status == "indexed" || d.Status == "ready");
 
             if (SubjectId.HasValue)
             {

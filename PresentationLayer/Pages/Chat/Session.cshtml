@@ -378,6 +378,90 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+    /* Subject Select Dropdown styling */
+    .subject-select {
+        background: rgba(255, 255, 255, 0.05);
+        color: #cbd5e1;
+        border: 1px solid var(--chat-border);
+        border-radius: 12px;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        outline: none;
+        margin: 0.3rem 0 0.3rem 0.5rem;
+        cursor: pointer;
+        max-width: 200px;
+        transition: all 0.3s ease;
+        align-self: center;
+    }
+
+    .subject-select:focus {
+        border-color: #6c63ff;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+    }
+
+    .subject-select option {
+        background: #151822;
+        color: #cbd5e1;
+    }
+
+    /* Message Citations styling */
+    .msg-citations-container {
+        margin-top: 0.6rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--chat-border);
+        border-radius: 12px;
+        padding: 0.6rem;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .citation-detail {
+        background: rgba(30, 35, 48, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 0.4rem;
+        transition: all 0.3s ease;
+    }
+
+    .citation-detail:last-child {
+        margin-bottom: 0;
+    }
+
+    .citation-detail[open] {
+        border-color: rgba(108, 99, 255, 0.3);
+        box-shadow: 0 4px 12px rgba(108, 99, 255, 0.05);
+    }
+
+    .citation-summary {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        color: #cbd5e1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        user-select: none;
+        list-style: none; /* Hide default arrow */
+    }
+
+    .citation-summary::-webkit-details-marker {
+        display: none; /* Hide default arrow in Safari */
+    }
+
+    .citation-summary:hover {
+        background: rgba(255, 255, 255, 0.03);
+        color: #fff;
+    }
+
+    .citation-content {
+        padding: 0.6rem 0.75rem;
+        background: rgba(11, 13, 20, 0.3);
+        border-top: 1px solid rgba(255, 255, 255, 0.03);
+    }
 </style>
 
 <div class="chat-layout">
@@ -399,7 +483,13 @@
                     var isActive = Model.CurrentSession.Id == h.Id;
                     <a asp-page="Session" asp-route-id="@h.Id" class="history-item @(isActive ? "active" : "")" title="@(string.IsNullOrWhiteSpace(h.Title) ? $"Phiên #{h.Id}" : h.Title)">
                         <i class="fa-regular fa-message" style="color: @(isActive ? "#a78bfa" : "#64748b");"></i>
-                        <span class="history-text">@(string.IsNullOrWhiteSpace(h.Title) ? $"Phiên #{h.Id}" : h.Title)</span>
+                        <div class="history-text" style="overflow: hidden; flex: 1; display: flex; flex-direction: column; line-height: 1.3;">
+                            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@(string.IsNullOrWhiteSpace(h.Title) ? $"Phiên #{h.Id}" : h.Title)</span>
+                            @if (!string.IsNullOrWhiteSpace(h.SubjectCode))
+                            {
+                                <span style="font-size: 0.75rem; color: @(isActive ? "#a78bfa" : "#64748b"); font-weight: 500;">@h.SubjectCode</span>
+                            }
+                        </div>
                     </a>
                 }
             }
@@ -411,6 +501,12 @@
             <h3 style="font-size: 1.05rem; font-weight: 600; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.6rem;">
                 <i class="fa-solid fa-layer-group" style="color: #a78bfa;"></i>
                 @(string.IsNullOrWhiteSpace(Model.CurrentSession.Title) ? $"Phiên #{Model.CurrentSession.Id}" : Model.CurrentSession.Title)
+                @if (!string.IsNullOrWhiteSpace(Model.CurrentSession.SubjectCode))
+                {
+                    <span style="font-size: 0.8rem; background: rgba(108, 99, 255, 0.2); color: #a78bfa; padding: 0.2rem 0.5rem; border-radius: 6px; border: 1px solid rgba(167, 139, 250, 0.3); margin-left: 0.5rem;">
+                        @Model.CurrentSession.SubjectCode
+                    </span>
+                }
             </h3>
             <a asp-page="Index" style="color: #64748b; font-size: 1.2rem; transition: color 0.2s;" title="Đóng phiên">
                 <i class="fa-solid fa-xmark"></i>
@@ -443,6 +539,36 @@
                         </div>
                         <div class="msg-body">
                             <div class="msg-bubble">@m.Content</div>
+                            @if (m.Citations != null && m.Citations.Any())
+                            {
+                                <div class="msg-citations-container">
+                                    <div style="font-size: 0.75rem; color: #a78bfa; font-weight: 600; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.3rem;">
+                                        <i class="fa-solid fa-book-open"></i> Nguồn tham khảo:
+                                    </div>
+                                    <div class="citations-list" style="display: flex; flex-direction: column; gap: 0.4rem; width: 100%;">
+                                        @foreach (var c in m.Citations)
+                                        {
+                                            <details class="citation-detail">
+                                                <summary class="citation-summary">
+                                                    <i class="fa-regular fa-file-lines" style="color: #cbd5e1; margin-right: 0.4rem;"></i>
+                                                    <span class="doc-title" style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 0.5rem;" title="@c.DocumentTitle">@c.DocumentTitle</span>
+                                                    @if (c.RelevanceScore.HasValue)
+                                                    {
+                                                        <span class="doc-score" style="font-size: 0.7rem; background: rgba(108, 99, 255, 0.2); color: #a78bfa; padding: 0.1rem 0.4rem; border-radius: 6px; border: 1px solid rgba(167, 139, 250, 0.3); white-space: nowrap;">
+                                                            Match: @((c.RelevanceScore.Value * 100).ToString("F1"))%
+                                                        </span>
+                                                    }
+                                                </summary>
+                                                <div class="citation-content">
+                                                    <blockquote style="margin: 0; padding-left: 0.75rem; border-left: 2px solid #6c63ff; font-size: 0.85rem; color: #94a3b8; line-height: 1.5; font-style: italic; white-space: pre-wrap;">
+                                                        @c.Snippet
+                                                    </blockquote>
+                                                </div>
+                                            </details>
+                                        }
+                                    </div>
+                                </div>
+                            }
                             <div class="msg-time">@(m.CreatedAt?.AddHours(7).ToString("HH:mm") ?? "")</div>
                         </div>
                     </div>
@@ -454,6 +580,15 @@
             <form asp-page-handler="Send" method="post" id="chatForm">
                 <input type="hidden" name="sessionId" value="@Model.CurrentSession.Id" />
                 <div class="input-row">
+                    @if (Model.Subjects != null && Model.Subjects.Any())
+                    {
+                        <select name="subjectId" id="subjectSelect" class="subject-select" required>
+                            @foreach (var s in Model.Subjects)
+                            {
+                                <option value="@s.Id" selected="@(Model.CurrentSession.SubjectId == s.Id)">@s.Name (@s.Code)</option>
+                            }
+                        </select>
+                    }
                     <textarea id="question" name="question" placeholder="Nhập câu hỏi của bạn (Shift + Enter để xuống dòng)..." rows="1" required></textarea>
                     <button type="submit" class="btn-send" id="btnSend">
                         <i class="fa-solid fa-paper-plane"></i>

@@ -15,6 +15,6 @@ namespace BussinessLayer.Interfaces
         Task DeleteAsync(long id);
         Task<IEnumerable<DocumentDto>> GetByUserIdAsync(long userId);
         Task<IEnumerable<DocumentChunkDto>> GetChunksByDocumentIdAsync(long documentId);
-        Task<(DocumentDto? SimilarDoc, double Similarity)> CheckSimilarityAsync(Microsoft.AspNetCore.Http.IFormFile file);
+        Task<(DocumentDto? SimilarDoc, double Similarity)> CheckSimilarityAsync(Microsoft.AspNetCore.Http.IFormFile file, long subjectId);
     }
 }

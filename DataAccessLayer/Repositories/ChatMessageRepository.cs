@@ -20,7 +20,11 @@ namespace DataAccessLayer.Repositories
 
         public async Task<IEnumerable<ChatMessage>> GetBySessionAsync(long sessionId)
         {
-            return await _db.ChatMessages.Where(m => m.SessionId == sessionId).ToListAsync();
+            return await _db.ChatMessages
+                .Include(m => m.MessageCitations)
+                    .ThenInclude(c => c.Document)
+                .Where(m => m.SessionId == sessionId)
+                .ToListAsync();
         }
     }
 }

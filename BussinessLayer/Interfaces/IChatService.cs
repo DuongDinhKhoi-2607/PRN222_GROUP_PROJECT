@@ -12,5 +12,6 @@ namespace BussinessLayer.Interfaces
         Task<IEnumerable<ChatSessionDto>> GetSessionsAsync(long userId);
         Task<ChatSessionDto?> GetSessionAsync(long sessionId);
         Task UpdateSessionTitleAsync(long sessionId, string title);
+        Task UpdateSessionSubjectAsync(long sessionId, long? subjectId);
     }
 }

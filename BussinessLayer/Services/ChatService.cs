@@ -27,7 +27,9 @@ namespace BussinessLayer.Services
             SubjectId = s.SubjectId,
             Title = s.Title,
             CreatedAt = s.CreatedAt,
-            UpdatedAt = s.UpdatedAt
+            UpdatedAt = s.UpdatedAt,
+            SubjectName = s.Subject?.Name,
+            SubjectCode = s.Subject?.Code
         };
 
         private static ChatMessageDto MapMessage(ChatMessage m) => new ChatMessageDto
@@ -36,7 +38,16 @@ namespace BussinessLayer.Services
             SessionId = m.SessionId,
             Role = m.Role,
             Content = m.Content,
-            CreatedAt = m.CreatedAt
+            CreatedAt = m.CreatedAt,
+            Citations = m.MessageCitations.Select(c => new MessageCitationDto
+            {
+                MessageId = c.MessageId,
+                ChunkId = c.ChunkId,
+                DocumentId = c.DocumentId,
+                RelevanceScore = c.RelevanceScore,
+                Snippet = c.Snippet,
+                DocumentTitle = c.Document?.Title ?? "Tài liệu không tên"
+            }).ToList()
         };
 
         public async Task<ChatSessionDto> CreateSessionAsync(long userId, long? subjectId = null, string? title = null)
@@ -87,6 +98,11 @@ namespace BussinessLayer.Services
         public async Task UpdateSessionTitleAsync(long sessionId, string title)
         {
             await _sessionRepo.UpdateTitleAsync(sessionId, title);
+        }
+
+        public async Task UpdateSessionSubjectAsync(long sessionId, long? subjectId)
+        {
+            await _sessionRepo.UpdateSubjectAsync(sessionId, subjectId);
         }
     }
 }

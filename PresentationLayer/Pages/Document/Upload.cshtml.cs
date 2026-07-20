@@ -185,7 +185,7 @@ namespace PresentationLayer.Pages.Document
                 }
 
                 // 2. Check for content similarity (>= 60%)
-                var (similarDoc, similarity) = await _docService.CheckSimilarityAsync(file);
+                var (similarDoc, similarity) = await _docService.CheckSimilarityAsync(file, SubjectId);
                 if (similarity >= 0.6 && similarDoc != null)
                 {
                     var simPercent = Math.Round(similarity * 100, 1);

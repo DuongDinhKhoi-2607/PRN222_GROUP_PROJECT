@@ -125,7 +125,7 @@ namespace BussinessLayer.Services
             });
         }
 
-        public async Task<(DocumentDto? SimilarDoc, double Similarity)> CheckSimilarityAsync(Microsoft.AspNetCore.Http.IFormFile file)
+        public async Task<(DocumentDto? SimilarDoc, double Similarity)> CheckSimilarityAsync(Microsoft.AspNetCore.Http.IFormFile file, long subjectId)
         {
             if (file == null) throw new ArgumentNullException(nameof(file));
 
@@ -146,7 +146,7 @@ namespace BussinessLayer.Services
                     return (null, 0.0);
                 }
 
-                var chunks = await _chunkRepo.GetAllAsync();
+                var chunks = await _chunkRepo.GetBySubjectIdAsync(subjectId);
                 var docChunksGroup = chunks.GroupBy(c => c.DocumentId);
 
                 DocumentDto? highestSimilarDoc = null;

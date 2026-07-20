@@ -39,14 +39,15 @@ namespace BussinessLayer.Services
 
             // ── System prompt ───────────────────────────────────────────────────
             var systemPrompt =
-                "Bạn là trợ lý AI thông minh, thân thiện và chuyên nghiệp, " +
-                "chuyên hỗ trợ người dùng tìm hiểu kiến thức từ tài liệu học tập.\n\n" +
-                "NGUYÊN TẮC:\n" +
-                "1. Ưu tiên trả lời dựa trên các đoạn tài liệu được cung cấp.\n" +
-                "2. Nếu câu hỏi là lời chào, hỏi thăm hoặc hội thoại thông thường, hãy trả lời tự nhiên và thân thiện.\n" +
-                "3. Nếu tài liệu không đủ thông tin, thông báo rõ ràng.\n" +
-                "4. Nhớ bối cảnh hội thoại trước để trả lời mạch lạc.\n" +
-                "5. Trả lời bằng ngôn ngữ của câu hỏi (tiếng Việt hoặc tiếng Anh).";
+                "Bạn là trợ lý AI thông minh chuyên hỗ trợ học tập.\n\n" +
+                "QUY TẮC BẮT BUỘC:\n" +
+                "1. Bạn CHỈ được phép trả lời câu hỏi dựa trên thông tin có trong phần \"📚 TÀI LIỆU THAM KHẢO\" được cung cấp.\n" +
+                "2. Bạn PHẢI trả lời bằng ngôn ngữ tương ứng mà người dùng sử dụng để đặt câu hỏi (Ví dụ: Hỏi bằng tiếng Anh thì bạn phải trả lời bằng tiếng Anh, hỏi bằng tiếng Việt thì phải trả lời bằng tiếng Việt).\n" +
+                "3. Nếu phần \"📚 TÀI LIỆU THAM KHẢO\" trống hoặc không chứa thông tin liên quan để trả lời câu hỏi:\n" +
+                "   - Nếu câu hỏi bằng tiếng Việt: Bạn PHẢI trả lời chính xác là: \"Tôi không tìm thấy thông tin liên quan trong tài liệu của môn học này.\"\n" +
+                "   - Nếu câu hỏi bằng tiếng Anh (hoặc ngôn ngữ khác): Bạn PHẢI trả lời chính xác là: \"I could not find relevant information in the documents for this subject.\"\n" +
+                "4. Tuyệt đối KHÔNG sử dụng kiến thức ngoài tài liệu tham khảo hoặc tài liệu của môn học khác để trả lời câu hỏi chuyên môn.\n" +
+                "5. Đối với lời chào hoặc giao tiếp thông thường (ví dụ: chào bạn, hello, hi, bạn là ai), bạn được phép trả lời tự nhiên và thân thiện theo đúng ngôn ngữ tương ứng.";
 
             // ── Context tài liệu ────────────────────────────────────────────────
             string docContext = "";
@@ -113,8 +114,17 @@ namespace BussinessLayer.Services
                             .GetProperty("text")
                             .GetString();
 
+                        var answerStr = answer ?? "";
                         var citations = contextList.Select(c => (c.Document, c.Chunk, c.Score));
-                        return (answer ?? "", citations);
+
+                        // Clear references if the LLM reports no information could be found in the documents
+                        if (answerStr.Contains("Tôi không tìm thấy thông tin liên quan trong tài liệu của môn học này") ||
+                            answerStr.Contains("I could not find relevant information in the documents for this subject"))
+                        {
+                            citations = Enumerable.Empty<(Document, DocumentChunk, float)>();
+                        }
+
+                        return (answerStr, citations);
                     }
 
                     var statusCode = (int)httpRes.StatusCode;

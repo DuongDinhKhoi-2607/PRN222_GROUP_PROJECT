@@ -41,16 +41,34 @@ namespace BussinessLayer.Services
                 // Strategy 1 (Default): Paragraph-based
                 var paragraphs = text.Split(new[] { "\r\n\r\n", "\n\n" }, StringSplitOptions.RemoveEmptyEntries);
                 int idx = 0;
+                int maxSize = maxChars ?? 1000;
                 foreach (var p in paragraphs)
                 {
                     var trimmed = p.Trim();
                     if (string.IsNullOrEmpty(trimmed)) continue;
-                    yield return new ChunkDto
+                    
+                    if (trimmed.Length <= maxSize)
                     {
-                        Index = idx++,
-                        Text = trimmed,
-                        TokenCount = trimmed.Length
-                    };
+                        yield return new ChunkDto
+                        {
+                            Index = idx++,
+                            Text = trimmed,
+                            TokenCount = trimmed.Length
+                        };
+                    }
+                    else
+                    {
+                        var subChunks = RecursiveSplit(trimmed, maxSize);
+                        foreach (var sc in subChunks)
+                        {
+                            yield return new ChunkDto
+                            {
+                                Index = idx++,
+                                Text = sc.Text,
+                                TokenCount = sc.Text.Length
+                            };
+                        }
+                    }
                 }
             }
         }

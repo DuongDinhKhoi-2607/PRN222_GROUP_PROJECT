@@ -13,8 +13,8 @@ namespace BussinessLayer.Interfaces
         Task<IEnumerable<RetrievalResult>> RetrieveAsync(
             string question,
             long? subjectId = null,
-            int topK = 15,
-            float minScore = 0.1f,
+            int topK = 5,
+            float minScore = 0.35f,
             long? strategyId = null);
     }
 }

@@ -71,7 +71,7 @@ namespace PresentationLayer.Pages.Chat
             return Page();
         }
 
-        public async Task<IActionResult> OnPostSendAsync(long sessionId, string question)
+        public async Task<IActionResult> OnPostSendAsync(long sessionId, string question, long? subjectId)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !long.TryParse(userIdClaim.Value, out var userId))
@@ -80,16 +80,24 @@ namespace PresentationLayer.Pages.Chat
             if (sessionId <= 0)
             {
                 var title = question.Length > 30 ? question.Substring(0, 30) + "..." : question;
-                var newSession = await _chat.CreateSessionAsync(userId, null, title);
+                var newSession = await _chat.CreateSessionAsync(userId, subjectId, title);
                 sessionId = newSession.Id;
             }
             else
             {
                 var session = await _chat.GetSessionAsync(sessionId);
-                if (session != null && string.IsNullOrWhiteSpace(session.Title))
+                if (session != null)
                 {
-                    var newTitle = question.Length > 30 ? question.Substring(0, 30) + "..." : question;
-                    await _chat.UpdateSessionTitleAsync(sessionId, newTitle);
+                    if (session.SubjectId != subjectId)
+                    {
+                        await _chat.UpdateSessionSubjectAsync(sessionId, subjectId);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(session.Title))
+                    {
+                        var newTitle = question.Length > 30 ? question.Substring(0, 30) + "..." : question;
+                        await _chat.UpdateSessionTitleAsync(sessionId, newTitle);
+                    }
                 }
             }
 
@@ -111,7 +119,7 @@ namespace PresentationLayer.Pages.Chat
             var summary = await _dashboardService.GetSummaryAsync();
             await _dashboardHub.Clients.Group("AdminDashboard").SendAsync("SummaryUpdated", summary);
 
-            var contexts = await _retrieval.RetrieveAsync(question, null);
+            var contexts = await _retrieval.RetrieveAsync(question, subjectId);
             var (answer, citations) = await _llm.GenerateAnswerAsync(question, contexts, null);
 
             var assistantMsg = await _chat.AddMessageAsync(sessionId, "assistant", answer);
