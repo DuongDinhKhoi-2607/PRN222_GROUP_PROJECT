@@ -379,33 +379,71 @@
             cursor: not-allowed;
         }
 
-    /* Subject Select Dropdown styling */
-    .subject-select {
-        background: rgba(255, 255, 255, 0.05);
-        color: #cbd5e1;
-        border: 1px solid var(--chat-border);
-        border-radius: 12px;
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-        outline: none;
-        margin: 0.3rem 0 0.3rem 0.5rem;
-        cursor: pointer;
-        max-width: 200px;
-        transition: all 0.3s ease;
+    /* =========================================================
+       THAY ĐỔI Ở ĐÂY: Subject Select Dropdown styling (Sang Xịn Đẹp)
+       ========================================================= */
+    .subject-select-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin: 0.3rem 0.5rem 0.3rem 0.5rem;
         align-self: center;
+    }
+
+    .subject-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background: linear-gradient(145deg, rgba(35, 40, 55, 0.9), rgba(20, 24, 34, 0.9));
+        color: #e2e8f0;
+        border: 1px solid rgba(108, 99, 255, 0.4);
+        border-radius: 12px;
+        padding: 0.6rem 2.2rem 0.6rem 1rem; /* Padding phải rộng ra để chừa chỗ cho icon */
+        font-size: 0.85rem;
+        font-weight: 500;
+        outline: none;
+        cursor: pointer;
+        max-width: 230px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .subject-select:hover {
+        border-color: #a78bfa;
+        background: linear-gradient(145deg, rgba(45, 50, 70, 0.95), rgba(30, 35, 48, 0.95));
+        box-shadow: 0 4px 20px rgba(108, 99, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .subject-select:focus {
         border-color: #6c63ff;
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-        box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+        box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.25), 0 4px 20px rgba(108, 99, 255, 0.2);
+    }
+
+    .select-icon {
+        position: absolute;
+        right: 0.9rem;
+        color: #a78bfa;
+        pointer-events: none; /* Rất quan trọng: cho phép click xuyên qua icon vào thẻ select */
+        font-size: 0.75rem;
+        transition: transform 0.3s ease, color 0.3s ease;
+    }
+
+    .subject-select:focus + .select-icon {
+        transform: rotate(180deg);
+        color: #6c63ff;
     }
 
     .subject-select option {
-        background: #151822;
-        color: #cbd5e1;
+        background: #1a1d27; /* Màu nền cho dropdown option hợp với dark theme */
+        color: #e2e8f0;
+        font-weight: 500;
+        padding: 12px;
     }
+    /* ========================================================= */
 
     /* Message Citations styling */
     .msg-citations-container {
@@ -582,12 +620,16 @@
                 <div class="input-row">
                     @if (Model.Subjects != null && Model.Subjects.Any())
                     {
-                        <select name="subjectId" id="subjectSelect" class="subject-select" required>
-                            @foreach (var s in Model.Subjects)
-                            {
-                                <option value="@s.Id" selected="@(Model.CurrentSession.SubjectId == s.Id)">@s.Name (@s.Code)</option>
-                            }
-                        </select>
+                        <!-- MỚI: Thêm thẻ bọc Wrapper ở đây để chèn Icon tùy chỉnh -->
+                        <div class="subject-select-wrapper">
+                            <select name="subjectId" id="subjectSelect" class="subject-select" required>
+                                @foreach (var s in Model.Subjects)
+                                {
+                                    <option value="@s.Id" selected="@(Model.CurrentSession.SubjectId == s.Id)">@s.Name (@s.Code)</option>
+                                }
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
                     }
                     <textarea id="question" name="question" placeholder="Nhập câu hỏi của bạn (Shift + Enter để xuống dòng)..." rows="1" required></textarea>
                     <button type="submit" class="btn-send" id="btnSend">
