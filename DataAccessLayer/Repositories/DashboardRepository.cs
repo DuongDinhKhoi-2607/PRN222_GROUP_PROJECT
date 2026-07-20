@@ -31,6 +31,22 @@ namespace DataAccessLayer.Repositories
         }
 
         /// <summary>
+        /// Gets token usage totals split by Pro vs Free users.
+        /// </summary>
+        public async Task<(int ProTokens, int FreeTokens)> GetProFreeTokensAsync()
+        {
+            var data = await _db.TokenUsageLogs
+                .Include(t => t.User)
+                .Select(t => new { t.TokensUsed, t.User.IsPro })
+                .ToListAsync();
+
+            return (
+                data.Where(t => t.IsPro).Sum(t => t.TokensUsed),
+                data.Where(t => !t.IsPro).Sum(t => t.TokensUsed)
+            );
+        }
+
+        /// <summary>
         /// Gets pro upgrade counts grouped by time period.
         /// </summary>
         public async Task<List<(DateTime Period, int Count, decimal Revenue)>> GetProUpgradesByPeriodAsync(
@@ -124,6 +140,49 @@ namespace DataAccessLayer.Repositories
                 "year" => (new DateTime(r.Year, 1, 1), r.TotalTokens),
                 "week" => (new DateTime(r.Year, 1, 1).AddDays(r.Period * 7), r.TotalTokens),
                 _ => (new DateTime(r.Year, r.Period, 1), r.TotalTokens)
+            }).ToList();
+        }
+
+        /// <summary>
+        /// Gets token usage by time period, split into Pro vs Free user groups.
+        /// </summary>
+        public async Task<List<(DateTime Period, int ProTokens, int FreeTokens)>> GetTokenUsageByTierAndPeriodAsync(
+            DateTime from, DateTime to, string groupBy)
+        {
+            var data = await _db.TokenUsageLogs
+                .Include(t => t.User)
+                .Where(t => t.UsedAt >= from && t.UsedAt <= to)
+                .Select(t => new { t.UsedAt, t.TokensUsed, t.User.IsPro })
+                .ToListAsync();
+
+            var cal = System.Globalization.CultureInfo.CurrentCulture.Calendar;
+
+            IEnumerable<(int Year, int Period, int ProTokens, int FreeTokens)> grouped = groupBy.ToLower() switch
+            {
+                "week" => data
+                    .GroupBy(t => new { t.UsedAt.Year, Week = cal.GetWeekOfYear(t.UsedAt, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday) })
+                    .Select(g => (g.Key.Year, g.Key.Week,
+                        g.Where(x => x.IsPro).Sum(x => x.TokensUsed),
+                        g.Where(x => !x.IsPro).Sum(x => x.TokensUsed))),
+                "year" => data
+                    .GroupBy(t => new { t.UsedAt.Year, Period = 0 })
+                    .Select(g => (g.Key.Year, g.Key.Period,
+                        g.Where(x => x.IsPro).Sum(x => x.TokensUsed),
+                        g.Where(x => !x.IsPro).Sum(x => x.TokensUsed))),
+                _ => data
+                    .GroupBy(t => new { t.UsedAt.Year, Period = t.UsedAt.Month })
+                    .Select(g => (g.Key.Year, g.Key.Period,
+                        g.Where(x => x.IsPro).Sum(x => x.TokensUsed),
+                        g.Where(x => !x.IsPro).Sum(x => x.TokensUsed)))
+            };
+
+            var results = grouped.OrderBy(g => g.Year).ThenBy(g => g.Period).ToList();
+
+            return results.Select(r => groupBy.ToLower() switch
+            {
+                "year" => (new DateTime(r.Year, 1, 1), r.ProTokens, r.FreeTokens),
+                "week" => (new DateTime(r.Year, 1, 1).AddDays(r.Period * 7), r.ProTokens, r.FreeTokens),
+                _ => (new DateTime(r.Year, r.Period, 1), r.ProTokens, r.FreeTokens)
             }).ToList();
         }
 

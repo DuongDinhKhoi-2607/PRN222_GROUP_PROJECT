@@ -29,6 +29,7 @@ namespace PresentationLayer.Pages.Admin
 
         // Serialized JSON for JavaScript charts
         public string ChartDataJson { get; set; } = "{}";
+        public string TokenTierSummaryJson { get; set; } = "{}";
 
         public async Task OnGetAsync()
         {
@@ -40,8 +41,15 @@ namespace PresentationLayer.Pages.Admin
             ChartDataJson = JsonSerializer.Serialize(new
             {
                 proUpgrades = ChartData.ProUpgrades.Select(p => new { label = p.Label, value = p.Value, revenue = p.Revenue }),
-                tokenUsage = ChartData.TokenUsage.Select(t => new { label = t.Label, value = t.Value }),
+                tokenUsage = ChartData.TokenUsage.Select(t => new { label = t.Label, value = t.Value, proTokens = t.ProTokens, freeTokens = t.FreeTokens }),
                 groupBy = ChartData.GroupBy
+            });
+
+            TokenTierSummaryJson = JsonSerializer.Serialize(new
+            {
+                proTokens = Summary.ProTokensUsed,
+                freeTokens = Summary.FreeTokensUsed,
+                total = Summary.TotalTokensUsed
             });
         }
 
@@ -54,7 +62,7 @@ namespace PresentationLayer.Pages.Admin
             return new JsonResult(new
             {
                 proUpgrades = chartData.ProUpgrades.Select(p => new { label = p.Label, value = p.Value, revenue = p.Revenue }),
-                tokenUsage = chartData.TokenUsage.Select(t => new { label = t.Label, value = t.Value }),
+                tokenUsage = chartData.TokenUsage.Select(t => new { label = t.Label, value = t.Value, proTokens = t.ProTokens, freeTokens = t.FreeTokens }),
                 groupBy = chartData.GroupBy
             });
         }

@@ -25,6 +25,7 @@ namespace BussinessLayer.Services
             var totalProUsers = await _dashboardRepo.GetTotalProUsersAsync();
             var totalRevenue = await _dashboardRepo.GetTotalRevenueAsync();
             var totalTokensUsed = await _dashboardRepo.GetTotalTokensUsedAsync();
+            var (proTokens, freeTokens) = await _dashboardRepo.GetProFreeTokensAsync();
 
             return new DashboardSummaryDto
             {
@@ -32,7 +33,9 @@ namespace BussinessLayer.Services
                 TotalProUsers = totalProUsers,
                 TotalRevenue = totalRevenue,
                 TotalTokensUsed = totalTokensUsed,
-                ProConversionRate = totalStudents > 0 ? Math.Round((double)totalProUsers / totalStudents * 100, 1) : 0
+                ProConversionRate = totalStudents > 0 ? Math.Round((double)totalProUsers / totalStudents * 100, 1) : 0,
+                ProTokensUsed = proTokens,
+                FreeTokensUsed = freeTokens
             };
         }
 
@@ -63,9 +66,11 @@ namespace BussinessLayer.Services
 
             var proUpgrades = await _dashboardRepo.GetProUpgradesByPeriodAsync(from, to, groupBy);
             var tokenUsage = await _dashboardRepo.GetTokenUsageByPeriodAsync(from, to, groupBy);
+            var tokenByTier = await _dashboardRepo.GetTokenUsageByTierAndPeriodAsync(from, to, groupBy);
 
             var proDict = proUpgrades.ToDictionary(p => FormatPeriodLabel(p.Period, groupBy), p => p);
             var tokenDict = tokenUsage.ToDictionary(t => FormatPeriodLabel(t.Period, groupBy), t => t);
+            var tierDict = tokenByTier.ToDictionary(t => FormatPeriodLabel(t.Period, groupBy), t => t);
 
             var finalPro = new List<TimeSeriesDataPointDto>();
             var finalToken = new List<TimeSeriesDataPointDto>();
@@ -81,14 +86,17 @@ namespace BussinessLayer.Services
                     finalPro.Add(new TimeSeriesDataPointDto { Label = label, Value = 0, Revenue = 0 });
                 }
 
-                if (tokenDict.TryGetValue(label, out var t))
+                int totalTok = 0, proTok = 0, freeTok = 0;
+                if (tokenDict.TryGetValue(label, out var t)) totalTok = t.TotalTokens;
+                if (tierDict.TryGetValue(label, out var tier)) { proTok = tier.ProTokens; freeTok = tier.FreeTokens; }
+
+                finalToken.Add(new TimeSeriesDataPointDto
                 {
-                    finalToken.Add(new TimeSeriesDataPointDto { Label = label, Value = t.TotalTokens });
-                }
-                else
-                {
-                    finalToken.Add(new TimeSeriesDataPointDto { Label = label, Value = 0 });
-                }
+                    Label = label,
+                    Value = totalTok,
+                    ProTokens = proTok,
+                    FreeTokens = freeTok
+                });
             }
 
             return new DashboardChartDataDto

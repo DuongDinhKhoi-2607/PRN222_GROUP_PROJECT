@@ -10,6 +10,9 @@ namespace BussinessLayer.DTOs
         public decimal TotalRevenue { get; set; }
         public int TotalTokensUsed { get; set; }
         public double ProConversionRate { get; set; }
+        // Token breakdown by tier
+        public int ProTokensUsed { get; set; }
+        public int FreeTokensUsed { get; set; }
     }
 
     public class TimeSeriesDataPointDto
@@ -17,6 +20,9 @@ namespace BussinessLayer.DTOs
         public string Label { get; set; } = string.Empty;
         public int Value { get; set; }
         public decimal Revenue { get; set; }
+        // Token breakdown by tier
+        public int ProTokens { get; set; }
+        public int FreeTokens { get; set; }
     }
 
     public class DashboardChartDataDto

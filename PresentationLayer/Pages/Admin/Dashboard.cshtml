@@ -70,7 +70,28 @@
 /* Live indicator */
 .live-dot { width: 8px; height: 8px; background: var(--accent-2); border-radius: 50%; animation: pulse-dot 2s infinite; display: inline-block; margin-right: .35rem; }
 
-@@media (max-width: 1100px) { .charts-grid { grid-template-columns: 1fr; } }
+/* Token Tier Analysis */
+.tier-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.5rem; }
+.tier-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+.tier-title { font-size: .95rem; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: .5rem; }
+.tier-body { display: grid; grid-template-columns: 1fr 280px; gap: 0; }
+.tier-table-wrap { border-right: 1px solid var(--border); overflow-x: auto; }
+.tier-table { width: 100%; border-collapse: collapse; }
+.tier-table th { padding: .7rem 1.25rem; font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); text-align: left; border-bottom: 1px solid var(--border); background: var(--bg-elevated); }
+.tier-table td { padding: .65rem 1.25rem; font-size: .82rem; color: var(--text-primary); border-bottom: 1px solid var(--border); }
+.tier-table tbody tr:last-child td { border-bottom: none; }
+.tier-table tbody tr:hover { background: var(--bg-hover); }
+.badge-tier-pro { display: inline-flex; align-items: center; gap: .3rem; padding: .12rem .5rem; background: rgba(255,215,0,.12); border: 1px solid rgba(255,215,0,.25); border-radius: 999px; font-size: .68rem; font-weight: 600; color: gold; }
+.badge-tier-free { display: inline-flex; align-items: center; gap: .3rem; padding: .12rem .5rem; background: rgba(0,212,170,.1); border: 1px solid rgba(0,212,170,.2); border-radius: 999px; font-size: .68rem; font-weight: 600; color: var(--accent-2); }
+.bar-pro { height: 6px; border-radius: 3px; background: linear-gradient(90deg, #ffd700, #ffb703); display: inline-block; }
+.bar-free { height: 6px; border-radius: 3px; background: linear-gradient(90deg, #00d4aa, #00b090); display: inline-block; }
+.tier-donut-wrap { padding: 1.5rem 1.25rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; }
+.tier-donut-wrap h4 { font-size: .78rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .05em; margin: 0; }
+.tier-legend { display: flex; flex-direction: column; gap: .5rem; width: 100%; }
+.tier-legend-item { display: flex; align-items: center; justify-content: space-between; font-size: .78rem; }
+.tier-legend-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: .5rem; flex-shrink: 0; }
+
+@@media (max-width: 1100px) { .charts-grid { grid-template-columns: 1fr; } .tier-body { grid-template-columns: 1fr; } .tier-table-wrap { border-right: none; border-bottom: 1px solid var(--border); } }
 @@media (max-width: 900px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
 @@media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr; } }
 </style>
@@ -162,6 +183,43 @@
         </div>
     </div>
 
+    <!-- Token Tier Analysis Section -->
+    <div class="tier-section">
+        <div class="tier-header">
+            <div class="tier-title">
+                <i class="fa-solid fa-layer-group" style="color:#a78bfa"></i>
+                Phân Tích Token Theo Gói
+            </div>
+            <div style="display:flex;gap:1rem;font-size:.78rem;color:var(--text-muted)">
+                <span><span class="badge-tier-pro"><i class="fa-solid fa-crown" style="font-size:.6rem"></i> Pro</span> &nbsp;@Model.Summary.ProTokensUsed.ToString("N0") token</span>
+                <span><span class="badge-tier-free"><i class="fa-solid fa-user" style="font-size:.6rem"></i> Free</span> &nbsp;@Model.Summary.FreeTokensUsed.ToString("N0") token</span>
+            </div>
+        </div>
+        <div class="tier-body">
+            <div class="tier-table-wrap">
+                <table class="tier-table">
+                    <thead>
+                        <tr>
+                            <th>Kỳ</th>
+                            <th><i class="fa-solid fa-crown" style="color:gold;font-size:.7rem"></i> Pro</th>
+                            <th><i class="fa-solid fa-user" style="color:var(--accent-2);font-size:.7rem"></i> Free</th>
+                            <th>Tổng</th>
+                            <th style="min-width:140px">Tỷ Lệ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tierTableBody">
+                        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tier-donut-wrap">
+                <h4>Tổng Token Theo Gói</h4>
+                <canvas id="tierDonutChart" style="max-width:180px;max-height:180px"></canvas>
+                <div class="tier-legend" id="tierLegend"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Recent Upgrades -->
     <div class="recent-card">
         <div class="recent-header">
@@ -214,7 +272,8 @@
     <script>
         // ── Chart.js Config ──────────────────────────────────────────────────
         const chartData = @Html.Raw(Model.ChartDataJson);
-        let proChart, tokenChart, revenueChart;
+        const tierSummary = @Html.Raw(Model.TokenTierSummaryJson);
+        let proChart, tokenChart, revenueChart, tierDonutChart;
 
         const chartDefaults = {
             responsive: true,
@@ -280,29 +339,50 @@
                 options: { ...chartDefaults }
             });
 
-            // Token Chart
+            // Token Chart — Stacked Bar (Pro vs Free)
             const tokenCtx = document.getElementById('tokenChart').getContext('2d');
             if (tokenChart) tokenChart.destroy();
             tokenChart = new Chart(tokenCtx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: tokenLabels,
-                    datasets: [{
-                        label: 'Token sử dụng',
-                        data: tokenValues,
-                        borderColor: '#00d4aa',
-                        backgroundColor: createGradient(tokenCtx, 'rgba(0,212,170,0.25)', 'rgba(0,212,170,0.02)'),
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#00d4aa',
-                        pointBorderColor: '#1e2330',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
+                    datasets: [
+                        {
+                            label: '👑 Pro',
+                            data: data.tokenUsage.map(d => d.proTokens),
+                            backgroundColor: 'rgba(255,215,0,0.75)',
+                            borderColor: '#ffd700',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            borderSkipped: false
+                        },
+                        {
+                            label: '🆓 Free',
+                            data: data.tokenUsage.map(d => d.freeTokens),
+                            backgroundColor: 'rgba(0,212,170,0.55)',
+                            borderColor: '#00d4aa',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            borderSkipped: false
+                        }
+                    ]
                 },
-                options: { ...chartDefaults }
+                options: {
+                    ...chartDefaults,
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        legend: { display: true, labels: { color: '#8b91a6', font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 16 } }
+                    },
+                    scales: {
+                        ...chartDefaults.scales,
+                        x: { ...chartDefaults.scales.x, stacked: true },
+                        y: { ...chartDefaults.scales.y, stacked: true }
+                    }
+                }
             });
+
+            // Populate tier table
+            initTierSection(data.tokenUsage);
 
             // Revenue Chart
             const revCtx = document.getElementById('revenueChart').getContext('2d');
@@ -342,6 +422,93 @@
 
         // Initialize charts on page load
         initCharts(chartData);
+        initTierDonut(tierSummary.proTokens, tierSummary.freeTokens);
+
+        // ── Tier Table & Donut ────────────────────────────────────────────────
+        function initTierSection(tokenUsage) {
+            const tbody = document.getElementById('tierTableBody');
+            const nonZero = tokenUsage.filter(d => (d.proTokens + d.freeTokens) > 0);
+
+            if (nonZero.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem"><i class="fa-solid fa-inbox" style="opacity:.3;font-size:1.5rem;display:block;margin-bottom:.5rem"></i>Chưa có dữ liệu sử dụng token</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = nonZero.map(d => {
+                const total = d.proTokens + d.freeTokens;
+                const proRatio = total > 0 ? Math.round(d.proTokens / total * 100) : 0;
+                const freeRatio = 100 - proRatio;
+                const fmt = n => new Intl.NumberFormat('vi-VN').format(n);
+                return `<tr>
+                    <td style="font-weight:500">${d.label}</td>
+                    <td><span style="color:gold;font-weight:600">${fmt(d.proTokens)}</span></td>
+                    <td><span style="color:var(--accent-2);font-weight:600">${fmt(d.freeTokens)}</span></td>
+                    <td style="color:var(--text-secondary)">${fmt(total)}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <div style="flex:1;height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;display:flex">
+                                <div style="width:${proRatio}%;background:linear-gradient(90deg,#ffd700,#ffb703);transition:width .4s"></div>
+                                <div style="width:${freeRatio}%;background:linear-gradient(90deg,#00d4aa,#00b090);transition:width .4s"></div>
+                            </div>
+                            <span style="font-size:.7rem;color:var(--text-muted);min-width:40px">Pro ${proRatio}%</span>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function initTierDonut(proTokens, freeTokens) {
+            const ctx = document.getElementById('tierDonutChart').getContext('2d');
+            if (tierDonutChart) tierDonutChart.destroy();
+            const total = proTokens + freeTokens;
+            const fmt = n => new Intl.NumberFormat('vi-VN').format(n);
+            const proP = total > 0 ? Math.round(proTokens / total * 100) : 0;
+            const freeP = 100 - proP;
+
+            tierDonutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pro', 'Free'],
+                    datasets: [{
+                        data: [proTokens || 0, freeTokens || 0],
+                        backgroundColor: ['rgba(255,215,0,0.85)', 'rgba(0,212,170,0.7)'],
+                        borderColor: ['#ffd700', '#00d4aa'],
+                        borderWidth: 2,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(30,35,48,0.95)',
+                            borderColor: 'rgba(255,255,255,0.08)',
+                            borderWidth: 1,
+                            titleColor: '#e8eaf0',
+                            bodyColor: '#8b91a6',
+                            cornerRadius: 8,
+                            padding: 10,
+                            callbacks: { label: c => ` ${fmt(c.raw)} token (${c.label})` }
+                        }
+                    }
+                }
+            });
+
+            // Update legend
+            document.getElementById('tierLegend').innerHTML = `
+                <div class="tier-legend-item">
+                    <div style="display:flex;align-items:center"><div class="tier-legend-dot" style="background:#ffd700"></div><span style="color:var(--text-secondary)">👑 Pro</span></div>
+                    <span style="font-weight:600;color:gold">${fmt(proTokens)} <span style="font-size:.7rem;font-weight:400;color:var(--text-muted)">(${proP}%)</span></span>
+                </div>
+                <div class="tier-legend-item">
+                    <div style="display:flex;align-items:center"><div class="tier-legend-dot" style="background:#00d4aa"></div><span style="color:var(--text-secondary)">🆓 Free</span></div>
+                    <span style="font-weight:600;color:var(--accent-2)">${fmt(freeTokens)} <span style="font-size:.7rem;font-weight:400;font-weight:400;color:var(--text-muted)">(${freeP}%)</span></span>
+                </div>`;
+        }
+
+
 
         // ── Filter Functions ──────────────────────────────────────────────────
         let currentGroupBy = '@Model.GroupBy';
