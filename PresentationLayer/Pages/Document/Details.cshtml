@@ -10,6 +10,8 @@
 .crud-page::-webkit-scrollbar { width: 4px; }
 .crud-page::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
 .details-grid { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; max-width: 1080px; margin: 0 auto; align-items: start; }
+/* MỚI: Sửa lỗi vỡ Layout Grid khi có nội dung dài */
+.details-grid > div { min-width: 0; } 
 @@media(max-width:768px) { .details-grid { grid-template-columns: 1fr; } }
 
 .page-heading { font-size: 1.4rem; font-weight: 700; background: linear-gradient(135deg, #fff, var(--accent-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1.75rem; display: flex; align-items: center; gap: .65rem; }
@@ -23,7 +25,8 @@
 .meta-list { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
 .meta-row { display: grid; grid-template-columns: 110px 1fr; gap: .75rem; align-items: start; }
 .meta-key { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); padding-top: .1rem; }
-.meta-val { font-size: .875rem; color: var(--text-primary); }
+/* MỚI: Ép text dài tự động bẻ dòng thay vì tràn viền */
+.meta-val { font-size: .875rem; color: var(--text-primary); word-break: break-word; overflow-wrap: break-word; display: block; }
 
 .badge-subject { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .7rem; background: rgba(108,99,255,.12); border: 1px solid rgba(108,99,255,.25); border-radius: 999px; font-size: .75rem; font-weight: 600; color: #a78bfa; }
 .status-pill { display: inline-flex; align-items: center; gap: .35rem; padding: .25rem .7rem; border-radius: 999px; font-size: .75rem; font-weight: 600; }
@@ -42,7 +45,7 @@
 .stat-item { padding: 1.25rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .stat-item:nth-child(even) { border-right: none; }
 .stat-item:nth-last-child(-n+2) { border-bottom: none; }
-.stat-val { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.stat-val { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; word-break: break-word; }
 .stat-lbl { font-size: .7rem; color: var(--text-muted); margin-top: .2rem; }
 
 .action-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-top: 1.5rem; display: flex; flex-direction: column; gap: .65rem; }
@@ -73,7 +76,7 @@
                     <div class="meta-row">
                         <span class="meta-key">File</span>
                         <span class="meta-val" style="color:var(--text-secondary)">@Model.Document.FileName
-                            <span style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:4px;padding:.1rem .4rem;font-size:.7rem;color:var(--text-muted);margin-left:.4rem">@Model.Document.FileType</span>
+                            <span style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:4px;padding:.1rem .4rem;font-size:.7rem;color:var(--text-muted);margin-left:.4rem;display:inline-block">@Model.Document.FileType</span>
                         </span>
                     </div>
                     <div class="meta-row">
